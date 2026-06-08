@@ -1,0 +1,53 @@
+{
+  "name": "freight-team-next-fe",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "sync": "npx swagger-typescript-api generate --path http://localhost:8000/swagger-json --axios --output src/hooks"
+  },
+  "dependencies": {
+    "@mantine/charts": "^8.3.10",
+    "@mantine/core": "^8.3.10",
+    "@mantine/dates": "^8.3.10",
+    "@mantine/dropzone": "^8.3.10",
+    "@mantine/form": "^8.3.10",
+    "@mantine/hooks": "^8.3.10",
+    "@mantine/modals": "^8.3.10",
+    "@mantine/notifications": "^8.3.10",
+    "@react-google-maps/api": "^2.19.3",
+    "@tabler/icons": "^3.35.0",
+    "@tabler/icons-react": "^3.35.0",
+    "@tanstack/react-query": "^5.90.12",
+    "@types/uuid": "^10.0.0",
+    "axios": "^1.13.2",
+    "dayjs": "^1.11.19",
+    "mantine-form-yup-resolver": "^2.0.0",
+    "next": "16.0.8",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "recharts": "^3.5.1",
+    "socket.io-client": "^4.8.3",
+    "tailwindcss": "^4.1.17",
+    "uuid": "^13.0.0",
+    "yup": "^1.7.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/google.maps": "^3.55.4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "baseline-browser-mapping": "^2.10.19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.8",
+    "postcss": "^8.5.6",
+    "postcss-preset-mantine": "^1.18.0",
+    "postcss-simple-vars": "^7.0.1",
+    "swagger-typescript-api": "^13.2.16",
+    "typescript": "^5"
+  }
+}
