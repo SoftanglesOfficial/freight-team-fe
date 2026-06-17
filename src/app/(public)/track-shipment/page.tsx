@@ -36,11 +36,12 @@ import {
   IconSettings,
 } from "@tabler/icons-react";
 import { useTrackShipmentQuery } from "@/hooks/shipments.hooks";
-import { useUpdateQuoteRequestMutation } from "@/hooks/quote-request.hooks";
 import ShipmentTrackingMap from "@/components/ShipmentTrackingMap";
 import dayjs from "dayjs";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/navigation";
+import { notifications } from "@mantine/notifications";
+import { BASE_URL } from "@/constants/URLS";
 
 const TrackShipmentContent = () => {
   const searchParams = useSearchParams();
@@ -53,8 +54,8 @@ const TrackShipmentContent = () => {
   const [paidPrice, setPaidPrice] = useState<number | string>("");
   const [chosenCarrier, setChosenCarrier] = useState("");
   const [targetPrice, setTargetPrice] = useState<number | string>("");
+  const [declineLoading, setDeclineLoading] = useState(false);
 
-  const updateQuote = useUpdateQuoteRequestMutation();
   const router = useRouter();
 
   // Check for ftl-id query parameter on mount
@@ -82,22 +83,36 @@ const TrackShipmentContent = () => {
 
   const handleDecline = async () => {
     if (!trackingInfo?.quote) return;
-
-    await updateQuote.mutateAsync({
-      id: trackingInfo.quote._id,
-      data: {
-        status: "Declined" as any,
-        feedback: {
-          reason: declineReason,
-          paidPrice,
-          chosenCarrier,
-          otherReason,
-          targetPrice,
+    setDeclineLoading(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || BASE_URL}/quote-request/${trackingInfo.quote._id}/decline`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            feedback: {
+              reason: declineReason,
+              paidPrice,
+              chosenCarrier,
+              otherReason,
+              targetPrice,
+            },
+          }),
         }
-      }
-    });
-    closeDecline();
-    refetch();
+      );
+      if (!res.ok) throw new Error(await res.text());
+      closeDecline();
+      refetch();
+    } catch {
+      notifications.show({
+        title: "Error",
+        message: "Failed to submit feedback. Please try again.",
+        color: "red",
+      });
+    } finally {
+      setDeclineLoading(false);
+    }
   };
 
   return (
@@ -177,7 +192,7 @@ const TrackShipmentContent = () => {
             <Button
               color="red"
               onClick={handleDecline}
-              loading={updateQuote.isPending}
+              loading={declineLoading}
               disabled={!declineReason}
             >
               Submit Feedback
