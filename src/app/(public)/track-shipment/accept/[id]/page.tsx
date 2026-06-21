@@ -22,6 +22,7 @@ import { IconCheck, IconTruck, IconArrowLeft, IconInfoCircle } from "@tabler/ico
 import { useGetQuoteRequestQuery } from "@/hooks/quote-request.hooks";
 import http from "@/hooks/Http";
 import { notifications } from "@mantine/notifications";
+import dayjs from "dayjs";
 
 export default function AcceptQuotePage() {
   const { id } = useParams();
@@ -42,8 +43,8 @@ export default function AcceptQuotePage() {
     destination_state: "",
     destination_business_name: "",
     destination_country: "US",
-    pickupDate: null as Date | null,
-    estimatedDeliveryDate: null as Date | null,
+    pickupDate: null as Date | string | null,
+    estimatedDeliveryDate: null as Date | string | null,
     notes: "",
   });
 
@@ -61,10 +62,13 @@ export default function AcceptQuotePage() {
     e.preventDefault();
     setLoading(true);
     try {
+      const { pickupDate, estimatedDeliveryDate, ...rest } = formData;
       await http.instance.post(`/quote-request/${id}/accept`, {
-        ...formData,
-        pickupDate: formData.pickupDate?.toISOString(),
-        estimatedDeliveryDate: formData.estimatedDeliveryDate?.toISOString(),
+        ...rest,
+        pickupDate: pickupDate ? dayjs(pickupDate).toISOString() : undefined,
+        estimatedDeliveryDate: estimatedDeliveryDate
+          ? dayjs(estimatedDeliveryDate).toISOString()
+          : undefined,
       });
       setSuccess(true);
       notifications.show({
