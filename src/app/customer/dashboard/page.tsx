@@ -13,17 +13,27 @@ import {
   Badge,
   Box,
 } from "@mantine/core";
-import { IconPackage, IconTruck, IconClock } from "@tabler/icons-react";
+import { IconPackage, IconTruck, IconClock, IconFileText } from "@tabler/icons-react";
 import { useGetShipmentsQuery } from "@/hooks/shipments.hooks";
+import { useGetQuoteRequestsQuery } from "@/hooks/quote-request.hooks";
+import { QuoteRequestStatus } from "@/hooks/Api";
 import { useRouter } from "next/navigation";
 
 export default function CustomerDashboardPage() {
   const router = useRouter();
   const { data: shipmentsData, isLoading } = useGetShipmentsQuery();
+  const { data: pendingQuotesData, isLoading: quotesLoading } =
+    useGetQuoteRequestsQuery({
+      page: 1,
+      pageSize: 1,
+      status: QuoteRequestStatus.PendingQuote,
+    });
+
+  const pendingQuotesCount = pendingQuotesData?.pagination?.totalRecords ?? 0;
   const shipments = shipmentsData?.records || [];
 
   const inTransitCount = shipments.filter(
-    (s: any) => s.status === "in_transit" || s.status === "active"
+    (s: any) => s.status === "in-transit"
   ).length;
   const deliveredCount = shipments.filter(
     (s: any) => s.status === "delivered"
@@ -52,7 +62,7 @@ export default function CustomerDashboardPage() {
     <Stack gap="xl">
       <Title order={1} c="#293674" fw={700}>Dashboard</Title>
 
-      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
         <Paper withBorder p="xl" radius="md" style={{ borderLeft: '4px solid #EA4745' }}>
           <Group justify="space-between" align="flex-start">
             <Stack gap={0}>
@@ -73,6 +83,26 @@ export default function CustomerDashboardPage() {
             </Stack>
             <ThemeIcon size={48} radius="md" color="orange" variant="light">
               <IconTruck size={28} />
+            </ThemeIcon>
+          </Group>
+        </Paper>
+
+        <Paper
+          withBorder
+          p="xl"
+          radius="md"
+          style={{ borderLeft: '4px solid #F59F00', cursor: 'pointer' }}
+          onClick={() => router.push('/customer/quotes')}
+        >
+          <Group justify="space-between" align="flex-start">
+            <Stack gap={0}>
+              <Text size="sm" c="dimmed" fw={500}>Pending Quotes</Text>
+              <Text size="xl" fw={700} style={{ fontSize: '2rem' }}>
+                {quotesLoading ? '...' : pendingQuotesCount}
+              </Text>
+            </Stack>
+            <ThemeIcon size={48} radius="md" color="yellow" variant="light">
+              <IconFileText size={28} />
             </ThemeIcon>
           </Group>
         </Paper>

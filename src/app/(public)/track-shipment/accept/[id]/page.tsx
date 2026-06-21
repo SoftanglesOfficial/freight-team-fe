@@ -72,10 +72,15 @@ export default function AcceptQuotePage() {
         message: "Your shipment has been booked. Our team will contact you shortly.",
         color: "green",
       });
-    } catch (error) {
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "Failed to process acceptance. Please try again.";
       notifications.show({
         title: "Error",
-        message: "Failed to process acceptance. Please try again.",
+        message,
         color: "red",
       });
     } finally {

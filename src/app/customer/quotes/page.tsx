@@ -105,6 +105,8 @@ export default function CustomerQuotesPage() {
                     <Button
                       variant="outline"
                       size="xs"
+                      component="a"
+                      href={`/customer/quotes/${quote._id}`}
                     >
                       View Details
                     </Button>
