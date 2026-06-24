@@ -60,6 +60,19 @@ const statusOptions = [
   { value: QuoteRequestStatusEnum.NotAccepted, label: "Not accepted" },
 ];
 
+const carrierOptions = [
+  "XPO Logistics",
+  "Old Dominion Freight Line",
+  "Estes Express",
+  "Saia LTL Freight",
+  "ABF Freight",
+  "R+L Carriers",
+  "Southeastern Freight Lines",
+  "Averitt Express",
+  "Forward Air",
+  "Other",
+];
+
 const getStatusBadgeColor = (status: string) => {
   switch (status) {
     case QuoteRequestStatusEnum.PendingQuote:
@@ -93,6 +106,9 @@ export default function AdminQuotesPage() {
   >(undefined);
   const [editableCarrierQuoteNumber, setEditableCarrierQuoteNumber] =
     useState<string>("");
+  const [editableCarrier, setEditableCarrier] = useState<string>("");
+  const [editableEstimatedTransitDays, setEditableEstimatedTransitDays] =
+    useState<number | undefined>(undefined);
   // Email quote modal state
   const [emailModalOpened, setEmailModalOpened] = useState(false);
   const [emailQuoteAmount, setEmailQuoteAmount] = useState<number | undefined>(undefined);
@@ -146,6 +162,14 @@ export default function AdminQuotesPage() {
         typeof selectedQuote.carrierQuoteNumber === "string"
           ? selectedQuote.carrierQuoteNumber
           : ""
+      );
+      setEditableCarrier(
+        typeof selectedQuote.carrier === "string" ? selectedQuote.carrier : ""
+      );
+      setEditableEstimatedTransitDays(
+        typeof selectedQuote.estimatedTransitDays === "number"
+          ? selectedQuote.estimatedTransitDays
+          : undefined
       );
       setEditableFullName(selectedQuote.full_name || "");
       setEditableEmail(selectedQuote.email || "");
@@ -232,6 +256,10 @@ export default function AdminQuotesPage() {
         quoteAmount: editableQuoteAmount ?? null,
         // @ts-expect-error - API accepts null for empty values
         carrierQuoteNumber: editableCarrierQuoteNumber.trim() || null,
+        // @ts-expect-error - API accepts null for empty values
+        carrier: editableCarrier.trim() || null,
+        // @ts-expect-error - API accepts null for empty values
+        estimatedTransitDays: editableEstimatedTransitDays ?? null,
         full_name: editableFullName,
         email: editableEmail,
         phone: editablePhone,
@@ -246,6 +274,12 @@ export default function AdminQuotesPage() {
     (selectedQuote.quoteAmount ?? undefined) ||
     (editableCarrierQuoteNumber || "") !==
     (selectedQuote.carrierQuoteNumber || "") ||
+    (editableCarrier || "") !==
+    (typeof selectedQuote.carrier === "string" ? selectedQuote.carrier : "") ||
+    (editableEstimatedTransitDays ?? undefined) !==
+    (typeof selectedQuote.estimatedTransitDays === "number"
+      ? selectedQuote.estimatedTransitDays
+      : undefined) ||
     editableFullName !== selectedQuote.full_name ||
     editableEmail !== selectedQuote.email ||
     editablePhone !== selectedQuote.phone ||
@@ -566,6 +600,32 @@ export default function AdminQuotesPage() {
                       </Tooltip>
                     )}
                   </Group>
+                </Grid.Col>
+                <Grid.Col span={6}>
+                  <Select
+                    label="Carrier"
+                    placeholder="Select carrier"
+                    data={carrierOptions}
+                    searchable
+                    clearable
+                    value={editableCarrier || null}
+                    onChange={(value) => setEditableCarrier(value || "")}
+                  />
+                </Grid.Col>
+                <Grid.Col span={6}>
+                  <NumberInput
+                    label="Estimated Transit Days"
+                    placeholder="e.g. 3"
+                    min={1}
+                    max={30}
+                    suffix=" business days"
+                    value={editableEstimatedTransitDays}
+                    onChange={(value) =>
+                      setEditableEstimatedTransitDays(
+                        typeof value === "number" ? value : undefined
+                      )
+                    }
+                  />
                 </Grid.Col>
                 <Grid.Col span={6}>
                   <Text size="sm" c="dimmed">
