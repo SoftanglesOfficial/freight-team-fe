@@ -60,19 +60,6 @@ const statusOptions = [
   { value: QuoteRequestStatusEnum.NotAccepted, label: "Not accepted" },
 ];
 
-const carrierOptions = [
-  "XPO Logistics",
-  "Old Dominion Freight Line",
-  "Estes Express",
-  "Saia LTL Freight",
-  "ABF Freight",
-  "R+L Carriers",
-  "Southeastern Freight Lines",
-  "Averitt Express",
-  "Forward Air",
-  "Other",
-];
-
 const getStatusBadgeColor = (status: string) => {
   switch (status) {
     case QuoteRequestStatusEnum.PendingQuote:
@@ -602,14 +589,11 @@ export default function AdminQuotesPage() {
                   </Group>
                 </Grid.Col>
                 <Grid.Col span={6}>
-                  <Select
+                  <TextInput
                     label="Carrier"
-                    placeholder="Select carrier"
-                    data={carrierOptions}
-                    searchable
-                    clearable
-                    value={editableCarrier || null}
-                    onChange={(value) => setEditableCarrier(value || "")}
+                    placeholder="e.g. XPO Logistics, Old Dominion, Estes..."
+                    value={editableCarrier}
+                    onChange={(e) => setEditableCarrier(e.currentTarget.value)}
                   />
                 </Grid.Col>
                 <Grid.Col span={6}>
