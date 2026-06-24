@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     ActionIcon,
     Button,
     Card,
+    Checkbox,
     Group,
     InputLabel,
     Select,
@@ -23,7 +24,7 @@ import { yupResolver } from "mantine-form-yup-resolver";
 import { DatePickerInput } from "@mantine/dates";
 import { useCreateQuoteRequestMutation } from "@/hooks/quote-request.hooks";
 import type { CreateQuoteRequestDto, Pallet } from "@/hooks/Api";
-import { useAuth } from "@/contexts/AuthContext";
+import { useGetProfileQuery } from "@/hooks/auth.hooks";
 import dayjs from "dayjs";
 
 const palletSchema = yup.object().shape({
@@ -84,6 +85,13 @@ const schema = yup.object().shape({
         .required("Pallets are required"),
     special_instructions: yup.string(),
     is_residential: yup.boolean().required(),
+    full_name: yup.string().required("Full name is required"),
+    email: yup.string().email("Invalid email").required("Email is required"),
+    phone: yup
+        .string()
+        .required("Phone is required")
+        .matches(/^[\d\s\-\+\(\)]+$/, "Invalid phone number format"),
+    company_name: yup.string(),
 });
 
 type FormValues = {
@@ -99,11 +107,16 @@ type FormValues = {
     }>;
     special_instructions: string;
     is_residential: boolean;
+    full_name: string;
+    email: string;
+    phone: string;
+    company_name: string;
 };
 
 export default function CustomerRequestQuotePage() {
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const { user } = useAuth();
+    const [agreeToTerms, setAgreeToTerms] = useState(false);
+    const { data: profile } = useGetProfileQuery();
     const { mutate: createQuoteRequest, isPending } =
         useCreateQuoteRequestMutation();
 
@@ -123,9 +136,29 @@ export default function CustomerRequestQuotePage() {
             ],
             special_instructions: "",
             is_residential: false,
+            full_name: "",
+            email: "",
+            phone: "",
+            company_name: "",
         },
         validate: yupResolver(schema),
     });
+
+    const fillContactFromProfile = () => {
+        if (!profile) return;
+        form.setFieldValue(
+            "full_name",
+            `${profile.first_name} ${profile.last_name || ""}`.trim(),
+        );
+        form.setFieldValue("email", profile.email || "");
+        form.setFieldValue("phone", profile.phone || "");
+        form.setFieldValue("company_name", profile.company_name || "");
+    };
+
+    useEffect(() => {
+        fillContactFromProfile();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [profile]);
 
     const addPallet = () => {
         form.insertListItem("pallets", {
@@ -160,10 +193,10 @@ export default function CustomerRequestQuotePage() {
             pallets,
             special_instructions: values.special_instructions || undefined,
             is_residential: values.is_residential,
-            full_name: `${user?.first_name || ""} ${user?.last_name || ""}`.trim(),
-            email: user?.email || "",
-            phone: "",
-            company_name: undefined,
+            full_name: values.full_name,
+            email: values.email,
+            phone: values.phone,
+            company_name: values.company_name || undefined,
         };
 
         createQuoteRequest(quoteData, {
@@ -202,7 +235,9 @@ export default function CustomerRequestQuotePage() {
                 <Button
                     onClick={() => {
                         setIsSubmitted(false);
+                        setAgreeToTerms(false);
                         form.reset();
+                        fillContactFromProfile();
                     }}
                     variant="gradient"
                     gradient={{ from: "#EA4745", to: "#FF9200" }}
@@ -377,6 +412,43 @@ export default function CustomerRequestQuotePage() {
                         />
                     </Stack>
 
+                    <Title order={3} fw={600}>
+                        Contact Information
+                    </Title>
+
+                    <Stack gap="md">
+                        <TextInput
+                            label="Full Name"
+                            placeholder="John Doe"
+                            {...form.getInputProps("full_name")}
+                        />
+                        <TextInput
+                            label="Email Address"
+                            placeholder="john.doe@example.com"
+                            type="email"
+                            {...form.getInputProps("email")}
+                        />
+                        <TextInput
+                            label="Phone #"
+                            placeholder="+1234567890"
+                            {...form.getInputProps("phone")}
+                        />
+                        <TextInput
+                            label="Company Name"
+                            placeholder="Example Inc."
+                            {...form.getInputProps("company_name")}
+                        />
+                    </Stack>
+
+                    <Checkbox
+                        label="I agree to receive emails and communications from Freight Team Logistics and consent to the processing of my information."
+                        checked={agreeToTerms}
+                        onChange={(event) => setAgreeToTerms(event.currentTarget.checked)}
+                        styles={{
+                            label: { fontSize: "0.8rem", color: "#555" },
+                        }}
+                    />
+
                     <Button
                         type="submit"
                         variant="gradient"
@@ -384,6 +456,7 @@ export default function CustomerRequestQuotePage() {
                         loading={isPending}
                         fullWidth
                         size="md"
+                        disabled={!agreeToTerms}
                     >
                         Request Quote
                     </Button>

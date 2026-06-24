@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
   SignupDto,
   SigninDto,
@@ -10,6 +10,7 @@ import type {
   ResetPasswordDto,
   UpdatePasswordDto,
   AuthDto,
+  User,
 } from "./Api";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
@@ -47,7 +48,6 @@ export const useRegisterMutation = () => {
       return res.data;
     },
     onSuccess: (data) => {
-      // Automatically log the user in after successful registration
       login(data.access_token, data.user);
 
       notifications.show({
@@ -56,7 +56,6 @@ export const useRegisterMutation = () => {
         color: "green",
       });
 
-      // Redirect based on role (assuming new users are customers by default)
       const roles = data.user?.roles ?? [];
       const isAdmin = roles.some(role =>
         role.toLowerCase().includes("admin") ||
@@ -71,6 +70,16 @@ export const useRegisterMutation = () => {
         message: extractErrorMessage(error),
         color: "red",
       });
+    },
+  });
+};
+
+export const useGetProfileQuery = () => {
+  return useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const res = await http.auth.authControllerGetProfile();
+      return res.data as User;
     },
   });
 };
