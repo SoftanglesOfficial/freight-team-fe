@@ -310,7 +310,7 @@ export default function CustomerQuoteDetailPage() {
                 <Text size="sm" c="dimmed">
                   Target / Counteroffer Price
                 </Text>
-                <Text fw={500}>{formatCurrency(feedback.targetPrice)}</Text>
+                <Text fw={500}>{String(feedback.targetPrice)}</Text>
               </Grid.Col>
             )}
             {feedback.otherReason && (

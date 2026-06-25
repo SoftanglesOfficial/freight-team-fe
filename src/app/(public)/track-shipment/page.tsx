@@ -53,7 +53,7 @@ const TrackShipmentContent = () => {
   const [otherReason, setOtherReason] = useState("");
   const [paidPrice, setPaidPrice] = useState<number | string>("");
   const [chosenCarrier, setChosenCarrier] = useState("");
-  const [targetPrice, setTargetPrice] = useState<number | string>("");
+  const [targetPrice, setTargetPrice] = useState("");
   const [declineLoading, setDeclineLoading] = useState(false);
 
   const router = useRouter();
@@ -167,13 +167,12 @@ const TrackShipmentContent = () => {
           )}
 
           {declineReason === "Counteroffer / Target Price" && (
-            <NumberInput
-              label="Can you hit $X? Enter your target price"
-              placeholder="e.g. 1100"
-              prefix="$"
+            <Textarea
+              label="Can you hit $X? Enter your target price or details"
+              placeholder='e.g. "$300 from xxx logistics so your quote is out of budget"'
               value={targetPrice}
-              onChange={setTargetPrice}
-              hideControls
+              onChange={(e) => setTargetPrice(e.currentTarget.value)}
+              minRows={3}
               description="Our team will review this and see if we can match it."
             />
           )}
