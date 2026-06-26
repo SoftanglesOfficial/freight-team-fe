@@ -17,9 +17,12 @@ import {
   Text,
   ActionIcon,
   Loader,
+  FileInput,
+  Paper,
 } from "@mantine/core";
 import { useJsApiLoader } from "@react-google-maps/api";
-import { IconPlus, IconTrash, IconSearch } from "@tabler/icons-react";
+import { IconPlus, IconTrash, IconSearch, IconUpload } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
 import { DatePickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import * as yup from "yup";
@@ -111,6 +114,8 @@ export default function CreateShipmentPage() {
 
   const [isOriginLoading, setIsOriginLoading] = useState(false);
   const [isDestinationLoading, setIsDestinationLoading] = useState(false);
+  const [bolParsing, setBolParsing] = useState(false);
+  const [bolFile, setBolFile] = useState<File | null>(null);
   const { selectedCustomer } = useAdminContext();
 
   const { mutate: createShipment, isPending } = useCreateShipmentMutation();
@@ -317,6 +322,85 @@ export default function CreateShipmentPage() {
     router.push("/admin/shipments");
   };
 
+  const handleBolUpload = async (file: File | null) => {
+    setBolFile(file);
+    if (!file) return;
+    setBolParsing(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const token =
+        localStorage.getItem("auth_token") ||
+        localStorage.getItem("token") ||
+        sessionStorage.getItem("auth_token") ||
+        "";
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/document/parse-bol`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const result = await res.json();
+
+      if (result.success && result.data) {
+        const d = result.data;
+
+        const updates: Record<string, any> = {};
+
+        if (d.shipper_zip) updates.originZipCode = d.shipper_zip;
+        if (d.consignee_zip) updates.destinationZipCode = d.consignee_zip;
+        if (d.carrier_name) updates.carrierName = d.carrier_name;
+        if (d.pro_number) updates.proNumber = d.pro_number;
+        if (d.special_instructions) updates.notes = d.special_instructions;
+        if (d.consignee_name) updates.customerName = d.consignee_name;
+        if (d.pickup_date) {
+          const parsed = new Date(d.pickup_date);
+          if (!isNaN(parsed.getTime())) updates.pickupDate = parsed;
+        }
+        if (d.weight) {
+          const pallets = (form.values as any).pallets || [];
+          if (pallets.length > 0) {
+            updates.pallets = pallets.map((p: any, i: number) =>
+              i === 0 ? { ...p, weight: parseFloat(d.weight) || p.weight } : p
+            );
+          }
+        }
+
+        form.setValues({ ...form.values, ...updates });
+
+        notifications.show({
+          title: "BOL Parsed Successfully",
+          message: `Extracted ${Object.keys(updates).length} fields. Please review and complete any missing information before saving.`,
+          color: "green",
+          autoClose: 6000,
+        });
+      } else {
+        notifications.show({
+          title: "Could Not Parse BOL",
+          message: result.error || "Please fill in the form manually.",
+          color: "orange",
+          autoClose: 5000,
+        });
+      }
+    } catch {
+      notifications.show({
+        title: "Parse Failed",
+        message: "Something went wrong. Please fill in the form manually.",
+        color: "red",
+      });
+    } finally {
+      setBolParsing(false);
+    }
+  };
+
   if (quoteId && isLoadingQuote) {
     return (
       <Box>
@@ -346,6 +430,37 @@ export default function CreateShipmentPage() {
 
       <form onSubmit={handleSubmit}>
         <Stack gap="xl">
+          <Paper withBorder p="lg" radius="md" mb="lg" style={{ borderLeft: "4px solid #293674" }}>
+            <Group justify="space-between" align="center" wrap="nowrap">
+              <Stack gap={4}>
+                <Text fw={600} c="#293674" size="md">
+                  Auto-fill from BOL PDF
+                </Text>
+                <Text size="sm" c="dimmed">
+                  Upload a BOL PDF to automatically populate shipment fields.
+                  You can review and edit all fields after extraction.
+                </Text>
+              </Stack>
+              <FileInput
+                placeholder="Upload BOL PDF"
+                accept="application/pdf"
+                leftSection={<IconUpload size={16} />}
+                onChange={handleBolUpload}
+                value={bolFile}
+                w={220}
+                clearable
+              />
+            </Group>
+            {bolParsing && (
+              <Group mt="sm" gap="xs">
+                <Loader size="xs" />
+                <Text size="sm" c="blue">
+                  Extracting data from BOL using AI... this may take a few seconds
+                </Text>
+              </Group>
+            )}
+          </Paper>
+
           {/* Customer Information Section */}
           <Card shadow="sm" padding="lg" withBorder>
             <Stack gap="md">
