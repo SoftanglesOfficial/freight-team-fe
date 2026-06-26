@@ -764,13 +764,6 @@ export default function AdminQuotesPage() {
             <Divider />
             <Group justify="flex-end" mt="md">
               <Button
-                variant="light"
-                color="blue"
-                onClick={handleOpenEmailModal}
-              >
-                Email Quote
-              </Button>
-              <Button
                 leftSection={<IconTruck size={16} />}
                 onClick={() => {
                   if (selectedQuote) {
