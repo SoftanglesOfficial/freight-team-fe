@@ -355,24 +355,60 @@ export default function CreateShipmentPage() {
 
         const updates: Record<string, any> = {};
 
+        // Origin (shipper = pickup location)
         if (d.shipper_zip) updates.originZipCode = d.shipper_zip;
+        if (d.shipper_address) updates.originStreetAddress = d.shipper_address;
+        if (d.shipper_city) updates.originCity = d.shipper_city;
+        if (d.shipper_state) updates.originState = d.shipper_state;
+        if (d.shipper_business_name) updates.originBusinessName = d.shipper_business_name;
+
+        // Destination (consignee = delivery location)
         if (d.consignee_zip) updates.destinationZipCode = d.consignee_zip;
+        if (d.consignee_address) updates.destinationStreetAddress = d.consignee_address;
+        if (d.consignee_city) updates.destinationCity = d.consignee_city;
+        if (d.consignee_state) updates.destinationState = d.consignee_state;
+        if (d.consignee_business_name) updates.destinationBusinessName = d.consignee_business_name;
+
+        // Shipment details
         if (d.carrier_name) updates.carrierName = d.carrier_name;
         if (d.pro_number) updates.proNumber = d.pro_number;
         if (d.special_instructions) updates.notes = d.special_instructions;
-        if (d.consignee_name) updates.customerName = d.consignee_name;
+
+        // Dates (MM/DD/YYYY from BOL parser)
         if (d.pickup_date) {
-          const parsed = new Date(d.pickup_date);
-          if (!isNaN(parsed.getTime())) updates.pickupDate = parsed;
-        }
-        if (d.weight) {
-          const pallets = (form.values as any).pallets || [];
-          if (pallets.length > 0) {
-            updates.pallets = pallets.map((p: any, i: number) =>
-              i === 0 ? { ...p, weight: parseFloat(d.weight) || p.weight } : p
-            );
+          const parts = d.pickup_date.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+          let parsed: Date | null = null;
+          if (parts) {
+            parsed = new Date(Number(parts[3]), Number(parts[1]) - 1, Number(parts[2]));
+          } else {
+            const fallback = new Date(d.pickup_date);
+            if (!isNaN(fallback.getTime())) parsed = fallback;
           }
+          if (parsed && !isNaN(parsed.getTime())) updates.pickupDate = parsed;
         }
+
+        // Pallets — update first pallet with weight and dimensions
+        const pallets = (form.values as any).pallets || [];
+        if (pallets.length > 0) {
+          const weightNum = d.weight ? parseFloat(d.weight.toString().replace(/[^\d.]/g, "")) : null;
+          const lengthNum = d.pallet_length ? parseFloat(d.pallet_length.toString().replace(/[^\d.]/g, "")) : null;
+          const widthNum = d.pallet_width ? parseFloat(d.pallet_width.toString().replace(/[^\d.]/g, "")) : null;
+          const heightNum = d.pallet_height ? parseFloat(d.pallet_height.toString().replace(/[^\d.]/g, "")) : null;
+
+          updates.pallets = pallets.map((p: any, i: number) => {
+            if (i !== 0) return p;
+            return {
+              ...p,
+              ...(weightNum && !isNaN(weightNum) ? { weight: weightNum } : {}),
+              ...(lengthNum && !isNaN(lengthNum) ? { length: lengthNum } : {}),
+              ...(widthNum && !isNaN(widthNum) ? { width: widthNum } : {}),
+              ...(heightNum && !isNaN(heightNum) ? { height: heightNum } : {}),
+            };
+          });
+        }
+
+        // Customer name from consignee
+        if (d.consignee_business_name) updates.customerName = d.consignee_business_name;
 
         form.setValues({ ...form.values, ...updates });
 

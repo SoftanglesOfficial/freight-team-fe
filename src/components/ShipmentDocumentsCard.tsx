@@ -94,8 +94,8 @@ export const ShipmentDocumentsCard: React.FC<ShipmentDocumentsCardProps> = ({
         url: uploadRes.url,
         file_id: uploadRes.fileId,
         category: category,
-        shipment_id: shipmentId, // Add shipmentId if it exists (e.g. in Edit mode)
-        customer_id: customerId, // Ensure the document is assigned to the customer
+        ...(shipmentId ? { shipment_id: shipmentId } : {}),
+        ...(customerId ? { customer_id: customerId.toString() } : {}),
       });
 
       // 3. Update state
