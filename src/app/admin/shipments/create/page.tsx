@@ -350,6 +350,9 @@ export default function CreateShipmentPage() {
 
       const result = await res.json();
 
+      console.log("BOL parse status:", res.status);
+      console.log("BOL parse result:", JSON.stringify(result));
+
       if (result.success && result.data) {
         const d = result.data;
 
