@@ -37,6 +37,19 @@ interface DocumentInfo {
   category: DocumentCategory;
 }
 
+function normalizeObjectId(value: unknown): string | undefined {
+  if (!value) return undefined;
+
+  const id =
+    typeof value === 'string'
+      ? value
+      : typeof value === 'object' && value !== null && '_id' in value
+        ? String((value as { _id: unknown })._id)
+        : String(value);
+
+  return /^[a-f\d]{24}$/i.test(id) ? id : undefined;
+}
+
 export const ShipmentDocumentsCard: React.FC<ShipmentDocumentsCardProps> = ({
   documents,
   onChange,
@@ -87,6 +100,9 @@ export const ShipmentDocumentsCard: React.FC<ShipmentDocumentsCardProps> = ({
       const uploadRes = await uploadFile(file);
       
       // 2. Create document record
+      const normalizedShipmentId = normalizeObjectId(shipmentId);
+      const normalizedCustomerId = normalizeObjectId(customerId);
+
       const docRes = await createDocument({
         name: file.name,
         size: file.size,
@@ -94,8 +110,8 @@ export const ShipmentDocumentsCard: React.FC<ShipmentDocumentsCardProps> = ({
         url: uploadRes.url,
         file_id: uploadRes.fileId,
         category: category,
-        ...(shipmentId ? { shipment_id: shipmentId } : {}),
-        ...(customerId ? { customer_id: customerId.toString() } : {}),
+        ...(normalizedShipmentId ? { shipment_id: normalizedShipmentId } : {}),
+        ...(normalizedCustomerId ? { customer_id: normalizedCustomerId } : {}),
       });
 
       // 3. Update state

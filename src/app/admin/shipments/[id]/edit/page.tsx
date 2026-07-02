@@ -168,7 +168,11 @@ export default function EditShipmentPage() {
     if (shipment) {
       form.setValues({
         customerName: shipment.customer?.name || "",
-        customer_id: (shipment as any).customer_id || "",
+        customer_id:
+          typeof (shipment as any).customer_id === "object" &&
+          (shipment as any).customer_id?._id
+            ? String((shipment as any).customer_id._id)
+            : (shipment as any).customer_id || "",
         customerPhone: shipment.customer?.phone || "",
         customerCompanyName: (shipment.customer as any)?.company_name || "",
         status: (shipment.status || "pending") as "pending" | "in-transit" | "delivered",
