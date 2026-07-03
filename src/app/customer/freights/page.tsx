@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Title,
   Table,
@@ -18,28 +18,52 @@ import {
 import { IconSearch, IconChevronDown, IconEye } from "@tabler/icons-react";
 import { useGetShipmentsQuery } from "@/hooks/shipments.hooks";
 import type { Shipment } from "@/hooks/Api";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "cancelled":
+      return "red";
+    case "delivered":
+      return "blue";
+    case "pending":
+      return "yellow";
+    case "in-transit":
+      return "green";
+    default:
+      return "gray";
+  }
+};
+
+const formatStatusLabel = (status: string) =>
+  status.replace("-", " ").toUpperCase();
 
 export default function CustomerFreightsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(
+    searchParams.get("status")
+  );
+
+  useEffect(() => {
+    setStatus(searchParams.get("status"));
+  }, [searchParams]);
 
   const { data: shipmentsData, isLoading } = useGetShipmentsQuery({
     proNumber: search || undefined,
-    // Add other filters as needed if supported by backend pattern
+    status: status || undefined,
+    pageSize: 50,
   });
 
   const shipments = shipmentsData?.records || [];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "cancelled": return "red";
-      case "delivered": return "blue";
-      case "pending": return "yellow";
-      case "active":
-      case "in_transit": return "green";
-      default: return "gray";
+  const handleStatusChange = (value: string | null) => {
+    setStatus(value);
+    if (value) {
+      router.replace(`/customer/freights?status=${value}`);
+    } else {
+      router.replace("/customer/freights");
     }
   };
 
@@ -53,11 +77,13 @@ export default function CustomerFreightsPage() {
 
   return (
     <Stack gap="xl">
-      <Title order={1} c="#293674" fw={700}>Shipments</Title>
+      <Title order={1} c="#293674" fw={700}>
+        Shipments
+      </Title>
 
       <Group justify="space-between">
         <TextInput
-          placeholder="Search..."
+          placeholder="Search by tracking #..."
           leftSection={<IconSearch size={16} />}
           value={search}
           onChange={(e) => setSearch(e.currentTarget.value)}
@@ -66,18 +92,18 @@ export default function CustomerFreightsPage() {
         <Select
           placeholder="All Status"
           data={[
-            { value: 'active', label: 'Active' },
-            { value: 'pending', label: 'Pending' },
-            { value: 'cancelled', label: 'Cancelled' },
+            { value: "pending", label: "Pending" },
+            { value: "in-transit", label: "In Transit" },
+            { value: "delivered", label: "Delivered" },
           ]}
           value={status}
-          onChange={setStatus}
+          onChange={handleStatusChange}
           rightSection={<IconChevronDown size={16} />}
           clearable
         />
       </Group>
 
-      <Paper withBorder radius="md" p={0} style={{ overflow: 'hidden' }}>
+      <Paper withBorder radius="md" p={0} style={{ overflow: "hidden" }}>
         <Table verticalSpacing="md" horizontalSpacing="lg" highlightOnHover>
           <Table.Thead bg="gray.0">
             <Table.Tr>
@@ -86,53 +112,66 @@ export default function CustomerFreightsPage() {
               <Table.Th>To</Table.Th>
               <Table.Th>Consignee</Table.Th>
               <Table.Th>Status</Table.Th>
-              <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {shipments.length > 0 ? shipments.map((shipment: Shipment) => (
-              <Table.Tr
-                key={shipment._id}
-                onClick={() => router.push(`/customer/freights/${shipment._id}`)}
-                style={{ cursor: "pointer" }}
-              >
-                <Table.Td>
-                  <Text fw={600}>{shipment.proNumber}</Text>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm">{shipment.origin_address.city}, {shipment.origin_address.state}</Text>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm">{shipment.destination_address.city}, {shipment.destination_address.state}</Text>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm">{shipment.customer.name}</Text>
-                </Table.Td>
-                <Table.Td>
-                  <Badge color={getStatusColor(shipment.status || "pending")} variant="light">
-                    {(shipment.status || "pending").toUpperCase()}
-                  </Badge>
-                </Table.Td>
-                <Table.Td>
-                  <Group justify="flex-end">
-                    <Button
+            {shipments.length > 0 ? (
+              shipments.map((shipment: Shipment) => (
+                <Table.Tr
+                  key={shipment._id}
+                  onClick={() => router.push(`/customer/freights/${shipment._id}`)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <Table.Td>
+                    <Text fw={600}>{shipment.proNumber}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm">
+                      {shipment.origin_address.city},{" "}
+                      {shipment.origin_address.state}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm">
+                      {shipment.destination_address.city},{" "}
+                      {shipment.destination_address.state}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm">{shipment.customer.name}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge
+                      color={getStatusColor(shipment.status || "pending")}
                       variant="light"
-                      size="xs"
-                      leftSection={<IconEye size={14} />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/customer/freights/${shipment._id}`);
-                      }}
                     >
-                      View Details
-                    </Button>
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-            )) : (
+                      {formatStatusLabel(shipment.status || "pending")}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group justify="flex-end">
+                      <Button
+                        variant="light"
+                        size="xs"
+                        leftSection={<IconEye size={14} />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/customer/freights/${shipment._id}`);
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))
+            ) : (
               <Table.Tr>
                 <Table.Td colSpan={6}>
-                  <Text ta="center" py="xl" c="dimmed">No shipments found.</Text>
+                  <Text ta="center" py="xl" c="dimmed">
+                    No shipments found.
+                  </Text>
                 </Table.Td>
               </Table.Tr>
             )}
@@ -142,5 +181,3 @@ export default function CustomerFreightsPage() {
     </Stack>
   );
 }
-
-
