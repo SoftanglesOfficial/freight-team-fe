@@ -22,24 +22,6 @@ export default function FaqsPage() {
             </Stack>
 
             <Stack gap="xs">
-              <Title order={4}>
-                Can I pay my invoice outside of the website?
-              </Title>
-              <Text>
-                Yes. We accept Zelle, ACH deposit, mailed checks, wire
-                transfers, and credit card payments by phone. <br />
-                For payment instructions or help with an invoice, email{" "}
-                <a
-                  href="mailto:sales@ftlwarehouse.com"
-                  className="text-[#0E336C] hover:underline fw-500"
-                >
-                  sales@ftlwarehouse.com
-                </a>
-                .
-              </Text>
-            </Stack>
-
-            <Stack gap="xs">
               <Title order={4}>What if I&apos;m having trouble logging in?</Title>
               <Text>
                 Email{" "}

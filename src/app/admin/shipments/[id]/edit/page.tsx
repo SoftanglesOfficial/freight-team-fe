@@ -663,7 +663,7 @@ export default function EditShipmentPage() {
                     {...form.getInputProps("quote_tracking_id")}
                   />
                   <TextInput
-                    label="FTL Warehouse ID #"
+                    label="PRO #"
                     placeholder="#123123124"
                     {...form.getInputProps("ftlWareHouseId")}
                   />
