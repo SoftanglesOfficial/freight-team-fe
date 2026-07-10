@@ -242,9 +242,9 @@ export default function CustomerShipmentDetailsPage() {
             </Grid.Col>
           </Grid>
 
-          {/* Row 3: Documents (BOL) | Invoices */}
+          {/* Row 3: Documents (BOL) */}
           <Grid align="stretch">
-            <Grid.Col span={{ base: 12, md: 6 }}>
+            <Grid.Col span={12}>
               <Card shadow="sm" padding="lg" withBorder h="100%">
                 <Title order={3} c="gray.8" mb="md">
                   <Group gap={0}>
@@ -278,44 +278,6 @@ export default function CustomerShipmentDetailsPage() {
                   </Stack>
                 ) : (
                   <Text size="sm" c="dimmed" fs="italic">No BOL attached.</Text>
-                )}
-              </Card>
-            </Grid.Col>
-
-            <Grid.Col span={{ base: 12, md: 6 }}>
-              <Card shadow="sm" padding="lg" withBorder h="100%">
-                <Title order={3} c="gray.8" mb="md">
-                  <Group gap={0}>
-                    <IconFileText size={20} style={{ marginRight: 8, verticalAlign: 'middle', color: '#228be6' }} />
-                    <div>Invoices</div>
-                  </Group>
-                </Title>
-                <Divider mb="lg" />
-                {documents?.filter(d => d.category === "Invoice").length ? (
-                  <Stack gap="sm">
-                    {documents.filter(d => d.category === "Invoice").map(doc => (
-                      <Paper key={doc._id} withBorder p="xs" radius="md">
-                        <Group justify="space-between" gap="sm">
-                          <Group gap="sm" style={{ flex: 1 }}>
-                            <ThemeIcon size="md" variant="light" color="blue">
-                              <IconFileText size={16} />
-                            </ThemeIcon>
-                            <Text size="sm" fw={600} truncate maw={300}>{doc.name}</Text>
-                          </Group>
-                          <Group gap="xs">
-                            <ActionIcon variant="light" color="blue" onClick={() => setViewingDoc({ url: doc.url, name: doc.name, type: doc.type })}>
-                              <IconEye size={14} />
-                            </ActionIcon>
-                            <ActionIcon variant="light" color="gray" component="a" href={doc.url} target="_blank">
-                              <IconDownload size={14} />
-                            </ActionIcon>
-                          </Group>
-                        </Group>
-                      </Paper>
-                    ))}
-                  </Stack>
-                ) : (
-                  <Text size="sm" c="dimmed" fs="italic">No invoices attached.</Text>
                 )}
               </Card>
             </Grid.Col>

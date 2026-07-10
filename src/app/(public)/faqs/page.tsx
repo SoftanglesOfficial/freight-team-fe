@@ -73,32 +73,6 @@ export default function FaqsPage() {
             </Stack>
 
             <Stack gap="xs">
-              <Title order={4}>How do I submit a billing dispute?</Title>
-              <Text>
-                Email{" "}
-                <a
-                  href="mailto:sales@ftlwarehouse.com"
-                  className="text-[#0E336C] hover:underline fw-500"
-                >
-                  sales@ftlwarehouse.com
-                </a>{" "}
-                with any supporting documents, including:
-              </Text>
-              <ul className="list-disc pl-5">
-                <li>Packing list</li>
-                <li>Commercial invoice</li>
-                <li>Product listing or website proof</li>
-                <li>Photos</li>
-                <li>Measurements or weight documentation</li>
-                <li>Any carrier paperwork or inspection notes</li>
-              </ul>
-              <Text>
-                We&apos;ll review it and submit the dispute to the carrier when
-                there is enough support to challenge the charge.
-              </Text>
-            </Stack>
-
-            <Stack gap="xs">
               <Title order={4}>How do I get a proof of delivery?</Title>
               <Text>
                 Email{" "}

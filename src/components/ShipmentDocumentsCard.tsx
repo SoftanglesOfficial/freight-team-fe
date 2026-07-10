@@ -121,20 +121,15 @@ export const ShipmentDocumentsCard: React.FC<ShipmentDocumentsCardProps> = ({
         category: category,
       };
 
-      let nextDocs: DocumentInfo[];
       if (category === DocumentCategory.BOL) {
         // Enforce SINGLE BOL
-        nextDocs = [
+        const nextDocs = [
           ...localDocs.filter(d => d.category !== DocumentCategory.BOL),
           newDoc
         ];
-      } else {
-        // Allow MULTIPLE Invoices
-        nextDocs = [...localDocs, newDoc];
+        setLocalDocs(nextDocs);
+        onChange(nextDocs.map(d => d.id));
       }
-
-      setLocalDocs(nextDocs);
-      onChange(nextDocs.map(d => d.id));
     } catch (err) {
       // Error handled by mutation hooks
     }
@@ -147,7 +142,6 @@ export const ShipmentDocumentsCard: React.FC<ShipmentDocumentsCardProps> = ({
   };
 
   const bolDocs = localDocs.filter(d => d.category === DocumentCategory.BOL);
-  const invoiceDocs = localDocs.filter(d => d.category === DocumentCategory.Invoice);
 
   return (
     <Card shadow="sm" padding="lg" withBorder h="100%">
@@ -211,41 +205,6 @@ export const ShipmentDocumentsCard: React.FC<ShipmentDocumentsCardProps> = ({
               <IconAlertCircle size={14} />
               <Text size="xs">{error}</Text>
             </Group>
-          )}
-        </Stack>
-
-        <Stack gap="xs" mt="md">
-          <Text size="sm" fw={600} c="gray.7">Invoice (Optional)</Text>
-          <FileButton onChange={(f) => handleUpload(f, DocumentCategory.Invoice)} accept="application/pdf,image/*">
-            {(props) => (
-              <Button
-                {...props}
-                variant="light"
-                color="blue"
-                leftSection={<IconUpload size={16} />}
-                fullWidth
-                disabled={isUploading || isCreatingDoc}
-              >
-                Upload Invoice
-              </Button>
-            )}
-          </FileButton>
-          {invoiceDocs.length > 0 && (
-            <List spacing="xs" size="sm" mt="xs">
-              {invoiceDocs.map((doc) => (
-                <List.Item
-                  key={doc.id}
-                  icon={<IconFileText size={16} color="green" />}
-                >
-                  <Group justify="space-between">
-                    <Text size="xs" truncate maw={150}>{doc.name}</Text>
-                    <ActionIcon variant="subtle" color="red" size="sm" onClick={() => removeDoc(doc.id)}>
-                      <IconTrash size={14} />
-                    </ActionIcon>
-                  </Group>
-                </List.Item>
-              ))}
-            </List>
           )}
         </Stack>
 

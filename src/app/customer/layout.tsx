@@ -14,7 +14,6 @@ import {
 } from "@mantine/core";
 import {
   IconLayoutDashboard,
-  IconReceipt,
   IconTruck,
   IconLogout,
   IconFileText,
@@ -27,11 +26,6 @@ const navItems = [
     href: "/customer/dashboard",
     label: "Dashboard",
     icon: IconLayoutDashboard,
-  },
-  {
-    href: "/customer/invoices",
-    label: "Where's my Invoice",
-    icon: IconReceipt,
   },
   { href: "/customer/freights", label: "Where's my Freight", icon: IconTruck },
   {

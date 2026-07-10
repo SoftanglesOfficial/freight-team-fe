@@ -245,7 +245,7 @@ const TrackShipmentContent = () => {
             Where&apos;s my Freight?
           </Title>
           <Text c="dimmed" size="lg">
-            Enter your tracking number or invoice number to track your shipment
+            Enter your tracking number to track your shipment
           </Text>
         </Box>
 
@@ -253,7 +253,7 @@ const TrackShipmentContent = () => {
         <Card shadow="sm" padding="lg" withBorder radius="md">
           <Stack gap="md">
             <Text fw={600} size="lg" c="gray.8">
-              Enter Tracking Number or Invoice #
+              Enter Tracking Number
             </Text>
             <Group gap="sm" align="flex-end">
               <TextInput
@@ -607,7 +607,7 @@ const TrackShipmentPage = () => {
                 Where&apos;s my Freight?
               </Title>
               <Text c="dimmed" size="lg">
-                Enter your tracking number or invoice number to track your shipment
+                Enter your tracking number to track your shipment
               </Text>
             </Box>
             <Card shadow="sm" padding="lg" withBorder radius="md">

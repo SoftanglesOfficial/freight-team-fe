@@ -30,7 +30,6 @@ import { Dropzone, IMAGE_MIME_TYPE, PDF_MIME_TYPE } from "@mantine/dropzone";
 import {
   IconSearch,
   IconEdit,
-  IconReceipt,
   IconFiles,
   IconUpload,
   IconFile,
@@ -391,12 +390,6 @@ export default function AdminCustomersPage() {
       pageSize: 50,
     });
 
-    const { data: invoicesData, isLoading: isLoadingInvoices } = useGetDocumentsQuery({
-      customer_id: detailsUser._id,
-      category: DocumentCategory.Invoice,
-      pageSize: 50,
-    });
-
     const { data: bolData, isLoading: isLoadingBOL } = useGetDocumentsQuery({
       customer_id: detailsUser._id,
       category: DocumentCategory.BOL,
@@ -482,9 +475,6 @@ export default function AdminCustomersPage() {
             </Tabs.Tab>
             <Tabs.Tab value="quotes" leftSection={<IconFileText size={16} />}>
               Quotes
-            </Tabs.Tab>
-            <Tabs.Tab value="invoices" leftSection={<IconReceipt size={16} />}>
-              Invoices
             </Tabs.Tab>
             <Tabs.Tab value="bol" leftSection={<IconFiles size={16} />}>
               BOL
@@ -589,65 +579,6 @@ export default function AdminCustomersPage() {
                         <Table.Td>{quote.origin_zip_code} → {quote.destination_zip_code}</Table.Td>
                         <Table.Td><Badge variant="light">{quote.status}</Badge></Table.Td>
                         <Table.Td c="dimmed">{dayjs(quote.createdAt).format("MMM DD, YYYY")}</Table.Td>
-                      </Table.Tr>
-                    ))
-                  )}
-                </Table.Tbody>
-              </Table>
-            </Table.ScrollContainer>
-          </Tabs.Panel>
-
-          <Tabs.Panel value="invoices">
-            <Group justify="space-between" mb="lg" mt="md">
-              <Group gap="sm">
-                <Title order={3} c="gray.8" fw={600}>Invoices</Title>
-              </Group>
-            </Group>
-            <Dropzone
-              onDrop={(files) => handleFileUpload(files, DocumentCategory.Invoice)}
-              accept={[...PDF_MIME_TYPE, ...IMAGE_MIME_TYPE]}
-              maxSize={30 * 1024 * 1024}
-              loading={uploadFileMutation.isPending || createDocumentMutation.isPending}
-              mb="xl"
-              styles={{
-                root: {
-                  borderColor: "var(--mantine-color-blue-4)",
-                  borderStyle: "dashed",
-                  background: "var(--mantine-color-blue-0)",
-                  padding: "2rem",
-                  borderRadius: "0.5rem"
-                }
-              }}
-            >
-              <Group justify="center" gap="xs">
-                <IconUpload size={20} />
-                <Text size="sm">Drag invoices here or click to upload specifically for this customer</Text>
-              </Group>
-            </Dropzone>
-            <Table.ScrollContainer minWidth={600}>
-              <Table verticalSpacing="sm" highlightOnHover>
-                <Table.Thead>
-                  <Table.Tr bg="gray.0">
-                    <Table.Th>Invoice Name</Table.Th>
-                    <Table.Th>Internal ID</Table.Th>
-                    <Table.Th>Date</Table.Th>
-                    <Table.Th px="xl">Action</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {isLoadingInvoices ? (
-                    <Table.Tr><Table.Td colSpan={4}><Text ta="center" py="xl">Loading...</Text></Table.Td></Table.Tr>
-                  ) : invoicesData?.records.length === 0 ? (
-                    <Table.Tr><Table.Td colSpan={4}><Text ta="center" py="xl" c="dimmed">No invoices linked.</Text></Table.Td></Table.Tr>
-                  ) : (
-                    invoicesData?.records.map((doc) => (
-                      <Table.Tr key={doc._id}>
-                        <Table.Td>{doc.name}</Table.Td>
-                        <Table.Td c="dimmed">{doc.internal_id}</Table.Td>
-                        <Table.Td>{dayjs(doc.createdAt).format("MMM DD, YYYY")}</Table.Td>
-                        <Table.Td px="xl">
-                          <Button variant="subtle" size="xs" component="a" href={doc.url} target="_blank">View</Button>
-                        </Table.Td>
                       </Table.Tr>
                     ))
                   )}
