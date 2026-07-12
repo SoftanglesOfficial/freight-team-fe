@@ -499,7 +499,7 @@ export default function AdminCustomersPage() {
               <Table verticalSpacing="sm" highlightOnHover withColumnBorders={false} withTableBorder={false}>
                 <Table.Thead>
                   <Table.Tr bg="gray.0">
-                    <Table.Th>Pro Number</Table.Th>
+                    <Table.Th>FTL Number</Table.Th>
                     <Table.Th>Route</Table.Th>
                     <Table.Th>Status</Table.Th>
                     <Table.Th>Date of Order</Table.Th>

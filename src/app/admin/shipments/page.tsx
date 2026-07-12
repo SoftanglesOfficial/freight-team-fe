@@ -194,7 +194,7 @@ export default function AdminShipmentsPage() {
           <Table verticalSpacing="md" highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Pro Number</Table.Th>
+                <Table.Th>FTL Number</Table.Th>
                 <Table.Th>Customer</Table.Th>
                 <Table.Th>Route</Table.Th>
                 <Table.Th>Carrier</Table.Th>

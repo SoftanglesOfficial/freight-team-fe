@@ -339,7 +339,7 @@ export default function AdminDashboardPage() {
             <Table verticalSpacing="sm" highlightOnHover>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>Pro Number</Table.Th>
+                  <Table.Th>FTL Number</Table.Th>
                   <Table.Th>Customer</Table.Th>
                   <Table.Th>Status</Table.Th>
                   <Table.Th>Date</Table.Th>

@@ -107,7 +107,7 @@ export default function CustomerFreightsPage() {
         <Table verticalSpacing="md" horizontalSpacing="lg" highlightOnHover>
           <Table.Thead bg="gray.0">
             <Table.Tr>
-              <Table.Th>Tracking #</Table.Th>
+              <Table.Th>FTL Number</Table.Th>
               <Table.Th>From</Table.Th>
               <Table.Th>To</Table.Th>
               <Table.Th>Consignee</Table.Th>
