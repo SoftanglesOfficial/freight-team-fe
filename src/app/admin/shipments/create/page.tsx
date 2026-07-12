@@ -78,6 +78,7 @@ const schema = yup.object().shape({
   destinationBusinessName: yup.string().optional(),
   quote_tracking_id: yup.string().optional(),
   ftlWareHouseId: yup.string().required("FTL Warehouse ID is required"),
+  proNumber: yup.string().required("PRO Number is required"),
   documents: yup.array().min(1, "At least a BOL document is required").required("BOL is required"),
   carrierName: yup.string().required("Carrier name is required"),
   dateOfOrder: yup.date().required("Date of order is required"),
@@ -142,6 +143,7 @@ export default function CreateShipmentPage() {
       destinationBusinessName: "",
       quote_tracking_id: "",
       ftlWareHouseId: "",
+      proNumber: "",
       carrierName: "",
       dateOfOrder: null as Date | null,
       pickupDate: null as Date | null,
@@ -261,7 +263,7 @@ export default function CreateShipmentPage() {
   };
 
   const handleSubmit = form.onSubmit((values) => {
-    const shipmentData: Omit<CreateShipmentDto, "proNumber"> = {
+    const shipmentData: CreateShipmentDto = {
       customer: {
         name: values.customerName,
         email: values.customerEmail,
@@ -287,6 +289,7 @@ export default function CreateShipmentPage() {
       ),
       quote_tracking_id: values.quote_tracking_id || undefined,
       ftlWareHouseId: values.ftlWareHouseId,
+      proNumber: values.proNumber,
       carrierName: values.carrierName,
       dateOfOrder: dayjs(values.dateOfOrder).toISOString(),
       pickupDate: values.pickupDate ? dayjs(values.pickupDate).toISOString() : undefined,
@@ -308,7 +311,7 @@ export default function CreateShipmentPage() {
       quoteId: values.quoteId || undefined,
     };
 
-    createShipment(shipmentData as CreateShipmentDto, {
+    createShipment(shipmentData, {
       onSuccess: () => {
         router.push("/admin/shipments");
       },
@@ -371,6 +374,7 @@ export default function CreateShipmentPage() {
 
         // Shipment details
         if (d.carrier_name) updates.carrierName = d.carrier_name;
+        if (d.pro_number) updates.proNumber = d.pro_number;
         if (d.special_instructions) updates.notes = d.special_instructions;
 
         // Dates (MM/DD/YYYY from BOL parser)
@@ -687,9 +691,14 @@ export default function CreateShipmentPage() {
                     {...form.getInputProps("quote_tracking_id")}
                   />
                   <TextInput
-                    label="PRO #"
+                    label="FTL Warehouse ID #"
                     placeholder="#123123124"
                     {...form.getInputProps("ftlWareHouseId")}
+                  />
+                  <TextInput
+                    label="PRO #"
+                    placeholder="Enter PRO Number"
+                    {...form.getInputProps("proNumber")}
                   />
                   <CarrierSelect
                     label="Carrier Name"

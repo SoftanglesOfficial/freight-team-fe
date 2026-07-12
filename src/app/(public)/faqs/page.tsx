@@ -68,7 +68,7 @@ export default function FaqsPage() {
                 and we&apos;ll send you the list of required documents. We help
                 file the claim for you, but the stronger the documentation, the
                 better. Photos, delivery notes, packing lists, commercial
-                invoices, and written damage notations all matter.
+                documentation, and written damage notations all matter.
               </Text>
             </Stack>
 

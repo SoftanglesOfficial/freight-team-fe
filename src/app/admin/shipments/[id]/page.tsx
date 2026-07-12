@@ -301,7 +301,7 @@ export default function ShipmentDetailsPage() {
                     <Text size="sm" fw={600}>{shipment.proNumber}</Text>
                   </Grid.Col>
                   <Grid.Col span={6}>
-                    <Text size="xs" c="dimmed" fw={500}>PRO #</Text>
+                    <Text size="xs" c="dimmed" fw={500}>FTL Warehouse ID</Text>
                     <Text size="sm" fw={600}>{shipment.ftlWareHouseId}</Text>
                   </Grid.Col>
                   <Grid.Col span={6}>

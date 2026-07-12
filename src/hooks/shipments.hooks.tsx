@@ -8,27 +8,10 @@ import type {
 } from "./Api";
 import { notifications } from "@mantine/notifications";
 import http from "./Http";
+import { extractApiErrorMessage } from "@/lib/api-error";
 
-type ApiError = {
-  response?: {
-    data?: {
-      message?: string;
-      error?: string;
-    };
-  };
-};
-
-const extractErrorMessage = (error: unknown) => {
-  const fallback = "Something went wrong. Please try again.";
-  if (!error) return fallback;
-  const apiError = error as ApiError;
-  return (
-    apiError.response?.data?.message ||
-    apiError.response?.data?.error ||
-    (error as Error).message ||
-    fallback
-  );
-};
+const extractErrorMessage = (error: unknown) =>
+  extractApiErrorMessage(error, "Something went wrong. Please try again.");
 
 export const useTrackShipmentQuery = (proNumber: string) => {
   return useQuery<TrackingResponseDto>({
@@ -59,6 +42,7 @@ export const useCreateShipmentMutation = () => {
         title: "Shipment creation failed",
         message: extractErrorMessage(error),
         color: "red",
+        autoClose: 10000,
       });
     },
   });

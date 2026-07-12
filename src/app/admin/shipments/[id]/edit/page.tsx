@@ -295,6 +295,7 @@ export default function EditShipmentPage() {
       ),
       quote_tracking_id: values.quote_tracking_id || undefined,
       ftlWareHouseId: values.ftlWareHouseId,
+      proNumber: values.proNumber,
       carrierName: values.carrierName,
       dateOfOrder: dayjs(values.dateOfOrder).toISOString(),
       pickupDate: values.pickupDate ? dayjs(values.pickupDate).toISOString() : undefined,
@@ -662,16 +663,14 @@ export default function EditShipmentPage() {
                     {...form.getInputProps("quote_tracking_id")}
                   />
                   <TextInput
-                    label="PRO #"
+                    label="FTL Warehouse ID #"
                     placeholder="#123123124"
                     {...form.getInputProps("ftlWareHouseId")}
                   />
                   <TextInput
-                    label="RTL Number"
-                    value={form.values.proNumber}
-                    readOnly
-                    disabled
-                    description="Auto-generated, cannot be changed"
+                    label="PRO Number"
+                    placeholder="Enter PRO Number"
+                    {...form.getInputProps("proNumber")}
                   />
                   <CarrierSelect
                     label="Carrier Name"
