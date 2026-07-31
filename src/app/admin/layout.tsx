@@ -31,6 +31,7 @@ import { useGetTotalUnreadForAdminQuery } from "@/hooks/live-chat.hooks";
 import { getSocket } from "@/lib/socket";
 import { AdminProvider, useAdminContext } from "@/contexts/AdminContext";
 import CustomerSearchSelect from "@/components/CustomerSearchSelect";
+import NotificationBell from "@/components/NotificationBell";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 
@@ -121,9 +122,12 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
       >
         {/* Header / Customer Selector */}
         <Stack gap="xs" p="md">
-          <Text size="xs" fw={700} c="rgba(255, 255, 255, 0.5)" tt="uppercase" lts="1px">
-            Global Focus
-          </Text>
+          <Group justify="space-between" align="center">
+            <Text size="xs" fw={700} c="rgba(255, 255, 255, 0.5)" tt="uppercase" lts="1px">
+              Global Focus
+            </Text>
+            <NotificationBell />
+          </Group>
 
           {!selectedCustomer ? (
             <CustomerSearchSelect

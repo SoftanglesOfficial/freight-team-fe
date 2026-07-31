@@ -20,6 +20,7 @@ import {
 } from "@tabler/icons-react";
 import { useLogout } from "@/hooks/auth.hooks";
 import { useRequireAuth } from "@/contexts/AuthContext";
+import NotificationBell from "@/components/NotificationBell";
 
 const navItems = [
   {
@@ -79,11 +80,11 @@ export default function CustomerLayout({
       >
         {/* Header */}
         <Stack gap="md" p="md">
-          <Group gap="sm">
-
-            <Text fw={700} c="white" size="sm">
+          <Group gap="sm" justify="space-between" wrap="nowrap">
+            <Text fw={700} c="white" size="sm" truncate>
               Hi, {user?.first_name || "Guest"}
             </Text>
+            <NotificationBell />
           </Group>
           <Divider color="rgba(255, 255, 255, 0.2)" />
         </Stack>
