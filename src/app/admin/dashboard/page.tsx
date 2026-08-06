@@ -388,8 +388,8 @@ export default function AdminDashboardPage() {
             <Table verticalSpacing="sm" highlightOnHover>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>FTL Number</Table.Th>
-                  <Table.Th>Customer</Table.Th>
+                  <Table.Th>FTL Warehouse ID</Table.Th>
+                  <Table.Th>PO Number</Table.Th>
                   <Table.Th>Status</Table.Th>
                   <Table.Th>Date</Table.Th>
                 </Table.Tr>
@@ -433,12 +433,12 @@ export default function AdminDashboardPage() {
                           style={{ cursor: "pointer" }}
                           onClick={() => router.push(`/admin/shipments/${shipment._id}`)}
                         >
-                          {shipment.proNumber}
+                          {shipment.ftlWareHouseId}
                         </Text>
                       </Table.Td>
                       <Table.Td>
                         <Text size="sm">
-                          {shipment.customer?.name || "N/A"}
+                          {shipment.poNumber || "N/A"}
                         </Text>
                       </Table.Td>
                       <Table.Td>

@@ -138,6 +138,10 @@ export default function CustomerShipmentDetailsPage() {
                     <Text size="sm" fw={600}>{shipment.ftlWareHouseId}</Text>
                   </Grid.Col>
                   <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                    <Text size="xs" c="dimmed" fw={500}>PO Number</Text>
+                    <Text size="sm" fw={600}>{shipment.poNumber || "N/A"}</Text>
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
                     <Text size="xs" c="dimmed" fw={500}>Order Date</Text>
                     <Text size="sm" fw={600}>{dayjs(shipment.dateOfOrder).format("MMM DD, YYYY")}</Text>
                   </Grid.Col>

@@ -51,7 +51,7 @@ export default function CustomerFreightsPage() {
   }, [searchParams]);
 
   const { data: shipmentsData, isLoading } = useGetShipmentsQuery({
-    proNumber: search || undefined,
+    ftlWareHouseId: search || undefined,
     status: status || undefined,
     pageSize: 50,
   });
@@ -83,7 +83,7 @@ export default function CustomerFreightsPage() {
 
       <Group justify="space-between">
         <TextInput
-          placeholder="Search by tracking #..."
+          placeholder="Search by FTL Warehouse ID..."
           leftSection={<IconSearch size={16} />}
           value={search}
           onChange={(e) => setSearch(e.currentTarget.value)}
@@ -107,10 +107,10 @@ export default function CustomerFreightsPage() {
         <Table verticalSpacing="md" horizontalSpacing="lg" highlightOnHover>
           <Table.Thead bg="gray.0">
             <Table.Tr>
-              <Table.Th>FTL Number</Table.Th>
+              <Table.Th>FTL Warehouse ID</Table.Th>
               <Table.Th>From</Table.Th>
               <Table.Th>To</Table.Th>
-              <Table.Th>Consignee</Table.Th>
+              <Table.Th>PO Number</Table.Th>
               <Table.Th>Status</Table.Th>
               <Table.Th style={{ textAlign: "right" }}>Actions</Table.Th>
             </Table.Tr>
@@ -124,7 +124,7 @@ export default function CustomerFreightsPage() {
                   style={{ cursor: "pointer" }}
                 >
                   <Table.Td>
-                    <Text fw={600}>{shipment.proNumber}</Text>
+                    <Text fw={600}>{shipment.ftlWareHouseId}</Text>
                   </Table.Td>
                   <Table.Td>
                     <Text size="sm">
@@ -139,7 +139,7 @@ export default function CustomerFreightsPage() {
                     </Text>
                   </Table.Td>
                   <Table.Td>
-                    <Text size="sm">{shipment.customer.name}</Text>
+                    <Text size="sm">{shipment.poNumber || "N/A"}</Text>
                   </Table.Td>
                   <Table.Td>
                     <Badge

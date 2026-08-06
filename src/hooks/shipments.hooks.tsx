@@ -53,6 +53,8 @@ export const useGetShipmentsQuery = (
     page?: number;
     pageSize?: number;
     proNumber?: string;
+    poNumber?: string;
+    ftlWareHouseId?: string;
     carrierName?: string;
     customer_name?: string;
     customer_email?: string;
