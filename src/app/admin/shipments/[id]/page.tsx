@@ -58,6 +58,7 @@ import {
   useDeleteDocumentMutation,
 } from "@/hooks/documents.hooks";
 import ShipmentTrackingMap from "@/components/ShipmentTrackingMap";
+import { locationNotesFromHistory } from "@/lib/location-notes";
 import http from "@/hooks/Http";
 import dayjs from "dayjs";
 
@@ -437,6 +438,7 @@ export default function ShipmentDetailsPage() {
                     onLocationUpdate={isUpdateLocationMode ? handleLocationClick : undefined}
                     lastNote={shipment.status_history?.[shipment.status_history.length - 1]?.note}
                     lastUpdate={shipment.status_history?.[shipment.status_history.length - 1]?.timestamp}
+                    locationNotes={locationNotesFromHistory(shipment.status_history)}
                     height="100%"
                   />
                 </Box>

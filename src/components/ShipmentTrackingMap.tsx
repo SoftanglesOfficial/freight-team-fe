@@ -11,17 +11,26 @@ interface Location {
   longitude: number;
 }
 
+export interface MapLocationNote {
+  latitude: number;
+  longitude: number;
+  note?: string;
+  timestamp?: string | Date;
+}
+
 interface ShipmentTrackingMapProps {
   origin: Location;
   destination: Location;
   currentLocation?: Location;
   onLocationUpdate?: (lat: number, lng: number) => void;
   height?: string;
-  originAddress?: string; // Optional: formatted address string for geocoding
-  destinationAddress?: string; // Optional: formatted address string for geocoding
+  originAddress?: string;
+  destinationAddress?: string;
   lastNote?: string;
   lastUpdate?: string | Date;
   hideCoordinates?: boolean;
+  /** Location updates from status history — click a pin to see its note */
+  locationNotes?: MapLocationNote[];
 }
 
 const libraries: ("drawing" | "geometry" | "places" | "visualization")[] = ["places"];
@@ -47,9 +56,10 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
   lastNote,
   lastUpdate,
   hideCoordinates = false,
+  locationNotes = [],
 }) => {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const [showInfoWindow, setShowInfoWindow] = useState(false);
+  const [activeNote, setActiveNote] = useState<MapLocationNote | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
@@ -129,6 +139,54 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
     return destination; // Fallback to original even if invalid
   }, [destination, geocodedDestination]);
 
+  const currentNote = useMemo((): MapLocationNote | null => {
+    if (!currentLocation) return null;
+    const match = [...locationNotes]
+      .reverse()
+      .find(
+        (n) =>
+          Math.abs(n.latitude - currentLocation.latitude) < 0.0001 &&
+          Math.abs(n.longitude - currentLocation.longitude) < 0.0001,
+      );
+    if (match) return match;
+    const withNote = [...locationNotes].reverse().find((n) => n.note);
+    if (withNote) {
+      return {
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+        note: withNote.note,
+        timestamp: withNote.timestamp || lastUpdate,
+      };
+    }
+    return {
+      latitude: currentLocation.latitude,
+      longitude: currentLocation.longitude,
+      note: lastNote,
+      timestamp: lastUpdate,
+    };
+  }, [currentLocation, locationNotes, lastNote, lastUpdate]);
+
+  const historyPins = useMemo(() => {
+    if (!currentLocation) return locationNotes;
+    return locationNotes.filter(
+      (n) =>
+        !(
+          Math.abs(n.latitude - currentLocation.latitude) < 0.0001 &&
+          Math.abs(n.longitude - currentLocation.longitude) < 0.0001
+        ),
+    );
+  }, [locationNotes, currentLocation]);
+
+  const openNote = useCallback((note: MapLocationNote) => {
+    setActiveNote((prev) =>
+      prev &&
+      Math.abs(prev.latitude - note.latitude) < 0.0001 &&
+      Math.abs(prev.longitude - note.longitude) < 0.0001
+        ? null
+        : note,
+    );
+  }, []);
+
   // Calculate center and bounds - only use valid coordinates
   const bounds = useMemo(() => {
     const allPoints: Array<{ lat: number; lng: number }> = [];
@@ -141,6 +199,11 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
     }
     if (currentLocation && isValidCoordinate(currentLocation)) {
       allPoints.push({ lat: currentLocation.latitude, lng: currentLocation.longitude });
+    }
+    for (const n of locationNotes) {
+      if (isValidCoordinate(n)) {
+        allPoints.push({ lat: n.latitude, lng: n.longitude });
+      }
     }
 
     // If no valid points, return default bounds
@@ -162,7 +225,7 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
       east: Math.max(...lngs),
       west: Math.min(...lngs),
     };
-  }, [effectiveOrigin, effectiveDestination, currentLocation]);
+  }, [effectiveOrigin, effectiveDestination, currentLocation, locationNotes]);
 
   const center = useMemo(() => {
     // Only calculate center if we have valid bounds
@@ -417,68 +480,43 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
           </>
         )}
 
+        {/* Prior location updates with notes */}
+        {historyPins.map((pin, idx) =>
+          isValidCoordinate(pin) ? (
+            <Marker
+              key={`hist-${idx}-${pin.latitude}-${pin.longitude}`}
+              position={{ lat: pin.latitude, lng: pin.longitude }}
+              title={pin.note || "Location update"}
+              onClick={() => openNote(pin)}
+              icon={{
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 7,
+                fillColor: "#f97316",
+                fillOpacity: 1,
+                strokeColor: "#ffffff",
+                strokeWeight: 2,
+              }}
+            />
+          ) : null,
+        )}
+
         {/* Current Location Marker (Yellow Star) */}
-        {currentLocation && (
+        {currentLocation && currentNote && (
           <>
             <Marker
               position={{ lat: currentLocation.latitude, lng: currentLocation.longitude }}
               title="Shipment (current location)"
-              onClick={() => setShowInfoWindow(!showInfoWindow)}
+              onClick={() => openNote(currentNote)}
               icon={{
                 path: "M 12,2 15,9 22,9 17,14 18,21 12,18 6,21 7,14 2,9 9,9 z",
                 scale: 1.5,
-                fillColor: "#facc15", // yellow-400
+                fillColor: "#facc15",
                 fillOpacity: 1,
-                strokeColor: "#854d0e", // yellow-900
+                strokeColor: "#854d0e",
                 strokeWeight: 2,
                 anchor: new google.maps.Point(12, 12),
               }}
             />
-            {showInfoWindow && (
-              <InfoWindow
-                position={{ lat: currentLocation.latitude, lng: currentLocation.longitude }}
-                onCloseClick={() => setShowInfoWindow(false)}
-              >
-                <Box p="xs" maw={250}>
-                  <Stack gap="xs">
-                    <Text size="sm" fw={700} c="gray.8">Current Location</Text>
-                    
-                    {!hideCoordinates && (
-                      <MantineGroup gap="xs" wrap="nowrap" align="flex-start">
-                        <IconMapPin size={14} style={{ marginTop: 3, flexShrink: 0 }} />
-                        <Text size="xs">
-                          {currentLocation.latitude.toFixed(6)}, {currentLocation.longitude.toFixed(6)}
-                        </Text>
-                      </MantineGroup>
-                    )}
-
-                    {lastUpdate && (
-                      <MantineGroup gap="xs" wrap="nowrap" align="flex-start">
-                        <IconClock size={14} style={{ marginTop: 3, flexShrink: 0 }} />
-                        <Text size="xs">
-                          {dayjs(lastUpdate).format("MMM DD, YYYY HH:mm")}
-                        </Text>
-                      </MantineGroup>
-                    )}
-
-                    {lastNote && (
-                      <>
-                        <Divider />
-                        <Stack gap={4}>
-                          <MantineGroup gap="xs">
-                            <IconNotes size={14} />
-                            <Text size="xs" fw={600}>Last Note:</Text>
-                          </MantineGroup>
-                          <Text size="xs" fs="italic" c="gray.7" style={{ wordBreak: 'break-word' }}>
-                            "{lastNote}"
-                          </Text>
-                        </Stack>
-                      </>
-                    )}
-                  </Stack>
-                </Box>
-              </InfoWindow>
-            )}
             <OverlayView
               position={{ lat: currentLocation.latitude, lng: currentLocation.longitude }}
               mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
@@ -506,6 +544,64 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
               </div>
             </OverlayView>
           </>
+        )}
+
+        {activeNote && (
+          <InfoWindow
+            position={{ lat: activeNote.latitude, lng: activeNote.longitude }}
+            onCloseClick={() => setActiveNote(null)}
+          >
+            <Box p="xs" maw={280}>
+              <Stack gap="xs">
+                <Text size="sm" fw={700} c="gray.8">
+                  {currentNote &&
+                  Math.abs(activeNote.latitude - currentNote.latitude) < 0.0001 &&
+                  Math.abs(activeNote.longitude - currentNote.longitude) < 0.0001
+                    ? "Current Location"
+                    : "Location Update"}
+                </Text>
+
+                {!hideCoordinates && (
+                  <MantineGroup gap="xs" wrap="nowrap" align="flex-start">
+                    <IconMapPin size={14} style={{ marginTop: 3, flexShrink: 0 }} />
+                    <Text size="xs">
+                      {activeNote.latitude.toFixed(6)}, {activeNote.longitude.toFixed(6)}
+                    </Text>
+                  </MantineGroup>
+                )}
+
+                {activeNote.timestamp && (
+                  <MantineGroup gap="xs" wrap="nowrap" align="flex-start">
+                    <IconClock size={14} style={{ marginTop: 3, flexShrink: 0 }} />
+                    <Text size="xs">
+                      {dayjs(activeNote.timestamp).format("MMM DD, YYYY HH:mm")}
+                    </Text>
+                  </MantineGroup>
+                )}
+
+                {activeNote.note ? (
+                  <>
+                    <Divider />
+                    <Stack gap={4}>
+                      <MantineGroup gap="xs">
+                        <IconNotes size={14} />
+                        <Text size="xs" fw={600}>
+                          Note
+                        </Text>
+                      </MantineGroup>
+                      <Text size="xs" fs="italic" c="gray.7" style={{ wordBreak: "break-word" }}>
+                        &ldquo;{activeNote.note}&rdquo;
+                      </Text>
+                    </Stack>
+                  </>
+                ) : (
+                  <Text size="xs" c="dimmed">
+                    No note for this location
+                  </Text>
+                )}
+              </Stack>
+            </Box>
+          </InfoWindow>
         )}
 
         {/* Route Polyline - only render if both coordinates are valid */}

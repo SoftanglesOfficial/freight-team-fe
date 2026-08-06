@@ -1,49 +1,114 @@
-import { Select, SelectProps } from "@mantine/core";
+import { Autocomplete, AutocompleteProps } from "@mantine/core";
+import { KeyboardEvent, useMemo } from "react";
 
-const carriers = [
-  { value: "A. Duie Pyle", label: "A. Duie Pyle" },
-  { value: "AAA Cooper", label: "AAA Cooper" },
-  { value: "ABF Freight", label: "ABF Freight" },
-  { value: "ACE Transport", label: "ACE Transport" },
-  { value: "ACI motor Freight", label: "ACI motor Freight" },
-  { value: "Best Overnite", label: "Best Overnite" },
-  { value: "Central Transport", label: "Central Transport" },
-  { value: "Custom Co.", label: "Custom Co." },
-  { value: "Daylight", label: "Daylight" },
-  { value: "Dayton Freight", label: "Dayton Freight" },
-  { value: "DDDP", label: "DDDP" },
-  { value: "Dohrn Transfer", label: "Dohrn Transfer" },
-  { value: "Dugan Truck Lines", label: "Dugan Truck Lines" },
-  { value: "EDI Express", label: "EDI Express" },
-  { value: "Estes", label: "Estes" },
-  { value: "Fedex Economy", label: "Fedex Economy" },
-  { value: "Fedex Priority", label: "Fedex Priority" },
-  { value: "Fedex Freight", label: "Fedex Freight" },
-  { value: "Fedex Ground", label: "Fedex Ground" },
-  { value: "Glovalink", label: "Glovalink" },
-  { value: "Roadrunner", label: "Roadrunner" },
-  { value: "R&L Carriers", label: "R&L Carriers" },
-  { value: "TOTAL Transport", label: "TOTAL Transport" },
-  { value: "Local Regional Carrier", label: "Local Regional Carrier" },
-  { value: "XPO Logistics", label: "XPO Logistics" },
-  { value: "T-Force", label: "T-Force" },
-  { value: "Ward Trucking", label: "Ward Trucking" },
-  { value: "Southeastern Freight Lines", label: "Southeastern Freight Lines" },
-  { value: "Saia", label: "Saia" },
-  { value: "Old Dominion", label: "Old Dominion" },
-  { value: "Forward Air", label: "Forward Air" },
-  { value: "Pitt Ohio", label: "Pitt Ohio" },
-  { value: "Full Truckload", label: "Full Truckload" },
-  { value: "Partial Truckload", label: "Partial Truckload" },
-  { value: "Other", label: "Other" },
+const CARRIERS = [
+  "A. Duie Pyle",
+  "AAA Cooper",
+  "ABF Freight",
+  "ACE Transport",
+  "ACI motor Freight",
+  "Best Overnite",
+  "Central Transport",
+  "Custom Co.",
+  "Daylight",
+  "Dayton Freight",
+  "DDDP",
+  "Dohrn Transfer",
+  "Dugan Truck Lines",
+  "EDI Express",
+  "Estes",
+  "Fedex Economy",
+  "Fedex Priority",
+  "Fedex Freight",
+  "Fedex Ground",
+  "Glovalink",
+  "Roadrunner",
+  "R&L Carriers",
+  "TOTAL Transport",
+  "Local Regional Carrier",
+  "XPO Logistics",
+  "T-Force",
+  "Ward Trucking",
+  "Southeastern Freight Lines",
+  "Saia",
+  "Old Dominion",
+  "Forward Air",
+  "Pitt Ohio",
+  "Full Truckload",
+  "Partial Truckload",
+  "Other",
 ];
 
-interface CarrierSelectProps extends Omit<SelectProps, "data"> {
+function acronym(name: string) {
+  return name
+    .split(/[\s&.-]+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .toLowerCase();
+}
+
+/** Best match for typed text / initials (e.g. "od" → Old Dominion). */
+export function bestCarrierMatch(query: string): string | null {
+  const q = query.trim().toLowerCase();
+  if (!q) return null;
+
+  const exact = CARRIERS.find((c) => c.toLowerCase() === q);
+  if (exact) return exact;
+
+  const starts = CARRIERS.filter((c) => c.toLowerCase().startsWith(q));
+  if (starts.length === 1) return starts[0];
+  if (starts.length > 1) {
+    starts.sort((a, b) => a.length - b.length);
+    return starts[0];
+  }
+
+  const byAcronym = CARRIERS.filter((c) => acronym(c).startsWith(q));
+  if (byAcronym.length === 1) return byAcronym[0];
+  if (byAcronym.length > 1) {
+    byAcronym.sort((a, b) => a.length - b.length);
+    return byAcronym[0];
+  }
+
+  const includes = CARRIERS.filter((c) => c.toLowerCase().includes(q));
+  if (includes.length) {
+    includes.sort((a, b) => a.length - b.length);
+    return includes[0];
+  }
+
+  return null;
+}
+
+interface CarrierSelectProps extends Omit<AutocompleteProps, "data"> {
   data?: never;
 }
 
-const CarrierSelect = ({ ...props }: CarrierSelectProps) => {
-  return <Select data={carriers} {...props} />;
+const CarrierSelect = ({ onChange, onKeyDown, value, ...props }: CarrierSelectProps) => {
+  const data = useMemo(() => CARRIERS, []);
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Tab" && !e.shiftKey) {
+      const current = String(value ?? "");
+      const match = bestCarrierMatch(current);
+      if (match && match !== current) {
+        e.preventDefault();
+        onChange?.(match);
+      }
+    }
+    onKeyDown?.(e);
+  };
+
+  return (
+    <Autocomplete
+      data={data}
+      value={value}
+      onChange={onChange}
+      onKeyDown={handleKeyDown}
+      placeholder="Type to search or enter a carrier"
+      {...props}
+    />
+  );
 };
 
 export default CarrierSelect;
+export { CARRIERS };

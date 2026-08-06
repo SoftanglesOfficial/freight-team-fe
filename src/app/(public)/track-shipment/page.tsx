@@ -37,6 +37,7 @@ import {
 } from "@tabler/icons-react";
 import { useTrackShipmentQuery } from "@/hooks/shipments.hooks";
 import ShipmentTrackingMap from "@/components/ShipmentTrackingMap";
+import { locationNotesFromHistory } from "@/lib/location-notes";
 import dayjs from "dayjs";
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter } from "next/navigation";
@@ -405,6 +406,19 @@ const TrackShipmentContent = () => {
                         }
                         originAddress={trackingInfo.shipment.origin_address?.formatted_address}
                         destinationAddress={trackingInfo.shipment.destination_address?.formatted_address}
+                        lastNote={
+                          trackingInfo.shipment.status_history?.[
+                            trackingInfo.shipment.status_history.length - 1
+                          ]?.note
+                        }
+                        lastUpdate={
+                          trackingInfo.shipment.status_history?.[
+                            trackingInfo.shipment.status_history.length - 1
+                          ]?.timestamp
+                        }
+                        locationNotes={locationNotesFromHistory(
+                          trackingInfo.shipment.status_history,
+                        )}
                         height="600px"
                         hideCoordinates={true}
                       />

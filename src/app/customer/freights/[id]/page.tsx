@@ -41,6 +41,7 @@ import {
   useGetDocumentsByShipmentIdQuery,
 } from "@/hooks/documents.hooks";
 import ShipmentTrackingMap from "@/components/ShipmentTrackingMap";
+import { locationNotesFromHistory } from "@/lib/location-notes";
 import dayjs from "dayjs";
 
 const getStatusBadgeColor = (status: string) => {
@@ -234,6 +235,7 @@ export default function CustomerShipmentDetailsPage() {
                     destinationAddress={shipment.destination_address?.formatted_address}
                     lastNote={shipment.status_history?.[shipment.status_history.length - 1]?.note}
                     lastUpdate={shipment.status_history?.[shipment.status_history.length - 1]?.timestamp}
+                    locationNotes={locationNotesFromHistory(shipment.status_history)}
                     height="100%"
                     hideCoordinates={true}
                   />

@@ -36,6 +36,7 @@ import {
 import { modals } from "@mantine/modals";
 import { useForm } from "@mantine/form";
 import CustomerSearchSelect from "@/components/CustomerSearchSelect";
+import CarrierSelect from "@/components/CarrierSelect";
 import {
   useGetUsersQuery,
   useCreateCustomerMutation,
@@ -589,11 +590,11 @@ export default function AdminQuotesPage() {
                   </Group>
                 </Grid.Col>
                 <Grid.Col span={6}>
-                  <TextInput
+                  <CarrierSelect
                     label="Carrier"
-                    placeholder="e.g. XPO Logistics, Old Dominion, Estes..."
+                    placeholder="Type to search or enter a carrier"
                     value={editableCarrier}
-                    onChange={(e) => setEditableCarrier(e.currentTarget.value)}
+                    onChange={setEditableCarrier}
                   />
                 </Grid.Col>
                 <Grid.Col span={6}>

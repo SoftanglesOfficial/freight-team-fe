@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Title,
@@ -16,6 +16,7 @@ import {
   ThemeIcon,
   Skeleton,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   IconFileText,
   IconTruck,
@@ -24,6 +25,7 @@ import {
   IconPlus,
   IconArrowRight,
   IconMessageCircle,
+  IconRefresh,
 } from "@tabler/icons-react";
 import { useGetQuoteRequestsQuery } from "@/hooks/quote-request.hooks";
 import { useGetShipmentsQuery } from "@/hooks/shipments.hooks";
@@ -37,6 +39,7 @@ import {
 } from "@/hooks/Api";
 import dayjs from "dayjs";
 import { useAdminContext } from "@/contexts/AdminContext";
+import { BASE_URL } from "@/constants/URLS";
 
 // --- Stat Card ---
 
@@ -161,6 +164,33 @@ const formatCurrency = (amount?: number | object | null) => {
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { selectedCustomer } = useAdminContext();
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+
+  const handleSyncNow = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || BASE_URL}/webhooks/google-sheets/sync-now`,
+      );
+      const data = await res.json();
+      setSyncResult(`Synced: ${data.updated} updated, ${data.skipped} skipped`);
+      notifications.show({
+        title: "Sync Complete",
+        message: `${data.updated} shipments updated from Google Sheets`,
+        color: "green",
+      });
+    } catch {
+      notifications.show({
+        title: "Sync Failed",
+        message: "Could not sync from Google Sheets",
+        color: "red",
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const customerFilter = selectedCustomer ? {
     customer_id: selectedCustomer._id,
@@ -230,9 +260,28 @@ export default function AdminDashboardPage() {
 
   return (
     <Box>
-      <Title order={1} mb="xl" c="gray.8">
-        Dashboard
-      </Title>
+      <Group justify="space-between" align="center" mb="xl">
+        <Title order={1} c="gray.8">
+          Dashboard
+        </Title>
+        <Group gap="sm">
+          {syncResult && (
+            <Text size="sm" c="dimmed">
+              {syncResult}
+            </Text>
+          )}
+          <Button
+            variant="light"
+            color="blue"
+            size="sm"
+            leftSection={<IconRefresh size={16} />}
+            loading={syncing}
+            onClick={handleSyncNow}
+          >
+            Sync from Google Sheets
+          </Button>
+        </Group>
+      </Group>
 
       {/* Summary Stat Cards */}
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md" mb="xl">

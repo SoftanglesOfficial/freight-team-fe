@@ -674,7 +674,7 @@ export default function EditShipmentPage() {
                   />
                   <CarrierSelect
                     label="Carrier Name"
-                    placeholder="Select Carrier"
+                    placeholder="Type to search or enter a carrier"
                     {...form.getInputProps("carrierName")}
                   />
                 </SimpleGrid>
