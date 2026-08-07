@@ -2,7 +2,7 @@
 
 import React, { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { GoogleMap, Marker, Polyline, useJsApiLoader, OverlayView, InfoWindow } from "@react-google-maps/api";
-import { Box, Text, Alert, Stack, Divider, Group as MantineGroup } from "@mantine/core";
+import { Box, Text, Alert, Stack, Divider, Group as MantineGroup, ScrollArea, Paper } from "@mantine/core";
 import { IconAlertCircle, IconMapPin, IconClock, IconNotes } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
@@ -12,8 +12,8 @@ interface Location {
 }
 
 export interface MapLocationNote {
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   note?: string;
   timestamp?: string | Date;
 }
@@ -29,7 +29,7 @@ interface ShipmentTrackingMapProps {
   lastNote?: string;
   lastUpdate?: string | Date;
   hideCoordinates?: boolean;
-  /** Location updates from status history — click a pin to see its note */
+  /** Location / note updates from status history — click a pin to see its note */
   locationNotes?: MapLocationNote[];
 }
 
@@ -145,6 +145,8 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
       .reverse()
       .find(
         (n) =>
+          n.latitude != null &&
+          n.longitude != null &&
           Math.abs(n.latitude - currentLocation.latitude) < 0.0001 &&
           Math.abs(n.longitude - currentLocation.longitude) < 0.0001,
       );
@@ -166,22 +168,48 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
     };
   }, [currentLocation, locationNotes, lastNote, lastUpdate]);
 
+  const geoNotes = useMemo(
+    () =>
+      locationNotes.filter(
+        (n) =>
+          n.latitude != null &&
+          n.longitude != null &&
+          Number.isFinite(n.latitude) &&
+          Number.isFinite(n.longitude) &&
+          !(n.latitude === 0 && n.longitude === 0),
+      ),
+    [locationNotes],
+  );
+
   const historyPins = useMemo(() => {
-    if (!currentLocation) return locationNotes;
-    return locationNotes.filter(
+    if (!currentLocation) return geoNotes;
+    return geoNotes.filter(
       (n) =>
         !(
-          Math.abs(n.latitude - currentLocation.latitude) < 0.0001 &&
-          Math.abs(n.longitude - currentLocation.longitude) < 0.0001
+          Math.abs((n.latitude as number) - currentLocation.latitude) < 0.0001 &&
+          Math.abs((n.longitude as number) - currentLocation.longitude) < 0.0001
         ),
     );
-  }, [locationNotes, currentLocation]);
+  }, [geoNotes, currentLocation]);
+
+  const notesHistory = useMemo(() => {
+    return [...locationNotes]
+      .filter((n) => !!n.note)
+      .sort((a, b) => {
+        const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return tb - ta;
+      });
+  }, [locationNotes]);
 
   const openNote = useCallback((note: MapLocationNote) => {
+    if (note.latitude == null || note.longitude == null) return;
     setActiveNote((prev) =>
       prev &&
-      Math.abs(prev.latitude - note.latitude) < 0.0001 &&
-      Math.abs(prev.longitude - note.longitude) < 0.0001
+      prev.latitude != null &&
+      prev.longitude != null &&
+      Math.abs(prev.latitude - note.latitude!) < 0.0001 &&
+      Math.abs(prev.longitude - note.longitude!) < 0.0001
         ? null
         : note,
     );
@@ -200,10 +228,8 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
     if (currentLocation && isValidCoordinate(currentLocation)) {
       allPoints.push({ lat: currentLocation.latitude, lng: currentLocation.longitude });
     }
-    for (const n of locationNotes) {
-      if (isValidCoordinate(n)) {
-        allPoints.push({ lat: n.latitude, lng: n.longitude });
-      }
+    for (const n of geoNotes) {
+      allPoints.push({ lat: n.latitude!, lng: n.longitude! });
     }
 
     // If no valid points, return default bounds
@@ -225,7 +251,7 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
       east: Math.max(...lngs),
       west: Math.min(...lngs),
     };
-  }, [effectiveOrigin, effectiveDestination, currentLocation, locationNotes]);
+  }, [effectiveOrigin, effectiveDestination, currentLocation, geoNotes]);
 
   const center = useMemo(() => {
     // Only calculate center if we have valid bounds
@@ -481,11 +507,10 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
         )}
 
         {/* Prior location updates with notes */}
-        {historyPins.map((pin, idx) =>
-          isValidCoordinate(pin) ? (
+        {historyPins.map((pin, idx) => (
             <Marker
               key={`hist-${idx}-${pin.latitude}-${pin.longitude}`}
-              position={{ lat: pin.latitude, lng: pin.longitude }}
+              position={{ lat: pin.latitude!, lng: pin.longitude! }}
               title={pin.note || "Location update"}
               onClick={() => openNote(pin)}
               icon={{
@@ -497,8 +522,7 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
                 strokeWeight: 2,
               }}
             />
-          ) : null,
-        )}
+        ))}
 
         {/* Current Location Marker (Yellow Star) */}
         {currentLocation && currentNote && (
@@ -546,7 +570,7 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
           </>
         )}
 
-        {activeNote && (
+        {activeNote && activeNote.latitude != null && activeNote.longitude != null && (
           <InfoWindow
             position={{ lat: activeNote.latitude, lng: activeNote.longitude }}
             onCloseClick={() => setActiveNote(null)}
@@ -555,6 +579,8 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
               <Stack gap="xs">
                 <Text size="sm" fw={700} c="gray.8">
                   {currentNote &&
+                  currentNote.latitude != null &&
+                  currentNote.longitude != null &&
                   Math.abs(activeNote.latitude - currentNote.latitude) < 0.0001 &&
                   Math.abs(activeNote.longitude - currentNote.longitude) < 0.0001
                     ? "Current Location"
@@ -667,6 +693,72 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
             Click on the map to update location
           </Text>
         </Box>
+      )}
+      {notesHistory.length > 0 && (
+        <Paper
+          shadow="sm"
+          withBorder
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            width: 260,
+            maxHeight: "calc(100% - 20px)",
+            zIndex: 2,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            backgroundColor: "rgba(255, 255, 255, 0.96)",
+          }}
+        >
+          <Box px="sm" py="xs" style={{ borderBottom: "1px solid #e9ecef" }}>
+            <MantineGroup gap="xs">
+              <IconNotes size={14} />
+              <Text size="xs" fw={700}>
+                Notes History
+              </Text>
+            </MantineGroup>
+          </Box>
+          <ScrollArea.Autosize mah={220} type="auto">
+            <Stack gap={0} p="xs">
+              {notesHistory.map((entry, idx) => {
+                const hasCoords =
+                  entry.latitude != null &&
+                  entry.longitude != null &&
+                  !(entry.latitude === 0 && entry.longitude === 0);
+                return (
+                  <Box
+                    key={`note-hist-${idx}-${entry.timestamp ?? idx}`}
+                    py="xs"
+                    px={4}
+                    style={{
+                      borderBottom:
+                        idx < notesHistory.length - 1 ? "1px solid #f1f3f5" : undefined,
+                      cursor: hasCoords ? "pointer" : "default",
+                    }}
+                    onClick={() => {
+                      if (hasCoords) openNote(entry);
+                    }}
+                  >
+                    {entry.timestamp && (
+                      <Text size="xs" c="dimmed" mb={2}>
+                        {dayjs(entry.timestamp).format("MMM DD, YYYY HH:mm")}
+                      </Text>
+                    )}
+                    <Text size="xs" style={{ wordBreak: "break-word" }}>
+                      {entry.note}
+                    </Text>
+                    {hasCoords && (
+                      <Text size="xs" c="orange.7" mt={2}>
+                        View on map
+                      </Text>
+                    )}
+                  </Box>
+                );
+              })}
+            </Stack>
+          </ScrollArea.Autosize>
+        </Paper>
       )}
     </Box>
   );

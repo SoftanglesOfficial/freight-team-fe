@@ -129,6 +129,12 @@ export default function CustomerShipmentDetailsPage() {
               </Grid.Col>
               <Grid.Col span={{ base: 12, sm: 6 }}>
                 <Text size="sm" c="dimmed">
+                  PO Number
+                </Text>
+                <Text fw={600}>{shipment.poNumber || "—"}</Text>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Text size="sm" c="dimmed">
                   Status
                 </Text>
                 <Badge

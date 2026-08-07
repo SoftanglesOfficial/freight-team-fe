@@ -499,7 +499,7 @@ export default function AdminCustomersPage() {
               <Table verticalSpacing="sm" highlightOnHover withColumnBorders={false} withTableBorder={false}>
                 <Table.Thead>
                   <Table.Tr bg="gray.0">
-                    <Table.Th>FTL Number</Table.Th>
+                    <Table.Th>FTL Warehouse ID</Table.Th>
                     <Table.Th>Route</Table.Th>
                     <Table.Th>Status</Table.Th>
                     <Table.Th>Date of Order</Table.Th>
@@ -520,7 +520,7 @@ export default function AdminCustomersPage() {
                             style={{ cursor: "pointer" }}
                             onClick={() => router.push(`/admin/shipments/${shipment._id}`)}
                           >
-                            {shipment.proNumber}
+                            {shipment.ftlWareHouseId}
                           </Text>
                         </Table.Td>
                         <Table.Td>{shipment.origin_address.city}, {shipment.origin_address.state} → {shipment.destination_address.city}, {shipment.destination_address.state}</Table.Td>

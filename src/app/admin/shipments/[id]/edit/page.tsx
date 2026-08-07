@@ -85,6 +85,7 @@ const schema = yup.object().shape({
   quote_tracking_id: yup.string().optional(),
   ftlWareHouseId: yup.string().required("FTL Number is required"),
   proNumber: yup.string().required("PRO Number is required"),
+  poNumber: yup.string().optional(),
   documents: yup.array().min(1, "At least a BOL document is required").required("BOL is required"),
   carrierName: yup.string().required("Carrier name is required"),
   dateOfOrder: yup.date().required("Date of order is required"),
@@ -152,6 +153,7 @@ export default function EditShipmentPage() {
       quote_tracking_id: "",
       ftlWareHouseId: "",
       proNumber: "",
+      poNumber: "",
       carrierName: "",
       dateOfOrder: null as Date | null,
       pickupDate: null as Date | null,
@@ -195,6 +197,7 @@ export default function EditShipmentPage() {
         quote_tracking_id: shipment.quote_tracking_id || "",
         ftlWareHouseId: shipment.ftlWareHouseId || "",
         proNumber: shipment.proNumber || "",
+        poNumber: shipment.poNumber || "",
         carrierName: shipment.carrierName || "",
         dateOfOrder: shipment.dateOfOrder
           ? dayjs(shipment.dateOfOrder).toDate()
@@ -297,6 +300,7 @@ export default function EditShipmentPage() {
       quote_tracking_id: values.quote_tracking_id || undefined,
       ftlWareHouseId: values.ftlWareHouseId,
       proNumber: values.proNumber,
+      poNumber: values.poNumber || undefined,
       carrierName: values.carrierName,
       dateOfOrder: dayjs(values.dateOfOrder).toISOString(),
       pickupDate: values.pickupDate ? dayjs(values.pickupDate).toISOString() : undefined,
@@ -396,19 +400,7 @@ export default function EditShipmentPage() {
         if (d.carrier_name) updates.carrierName = d.carrier_name;
         if (d.pro_number) updates.proNumber = d.pro_number;
         if (d.special_instructions) setNewNoteText(d.special_instructions);
-
-        // Dates (MM/DD/YYYY from BOL parser)
-        if (d.pickup_date) {
-          const parts = d.pickup_date.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-          let parsed: Date | null = null;
-          if (parts) {
-            parsed = new Date(Number(parts[3]), Number(parts[1]) - 1, Number(parts[2]));
-          } else {
-            const fallback = new Date(d.pickup_date);
-            if (!isNaN(fallback.getTime())) parsed = fallback;
-          }
-          if (parsed && !isNaN(parsed.getTime())) updates.pickupDate = parsed;
-        }
+        // Pickup date is always manual — do not autofill from BOL
 
         // Pallets — update first pallet with weight and dimensions
         const pallets = (form.values as any).pallets || [];
@@ -696,6 +688,11 @@ export default function EditShipmentPage() {
                     placeholder="e.g. Q-123456"
                     {...form.getInputProps("quote_tracking_id")}
                   />
+                  <TextInput
+                    label="PO Number"
+                    placeholder="Customer PO number"
+                    {...form.getInputProps("poNumber")}
+                  />
                   <CarrierSelect
                     label="Carrier Name"
                     placeholder="Type to search or enter a carrier"
@@ -717,6 +714,12 @@ export default function EditShipmentPage() {
                       placeholder="mm / dd / yyyy"
                       valueFormat="MM / DD / YYYY"
                       {...form.getInputProps("pickupDate")}
+                      onChange={(value) => {
+                        form.setFieldValue("pickupDate", value);
+                        if (value) {
+                          form.setFieldValue("status", "in-transit");
+                        }
+                      }}
                     />
                     <Text size="xs" c="dimmed" mt={4}>
                       Entering a pickup date will automatically set status to In Transit

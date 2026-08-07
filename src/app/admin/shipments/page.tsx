@@ -99,6 +99,8 @@ export default function AdminShipmentsPage() {
       const matchesSearch =
         searchQuery === "" ||
         (shipment.ftlWareHouseId || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (shipment.poNumber || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+
         (shipment.proNumber || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (shipment.customer?.name || "")
           .toLowerCase()
@@ -170,7 +172,7 @@ export default function AdminShipmentsPage() {
       {/* Filters */}
       <Group mb="xl" gap="md">
         <TextInput
-          placeholder="Search by Pro Number, customer, route, or carrier..."
+          placeholder="Search by FTL Warehouse ID, PO, PRO, customer, route, or carrier..."
           leftSection={<IconSearch size={16} />}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
@@ -195,8 +197,8 @@ export default function AdminShipmentsPage() {
           <Table verticalSpacing="md" highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>FTL Number</Table.Th>
-                <Table.Th>Customer</Table.Th>
+                <Table.Th>FTL Warehouse ID</Table.Th>
+                <Table.Th>PO Number</Table.Th>
                 <Table.Th>Route</Table.Th>
                 <Table.Th>Carrier</Table.Th>
                 <Table.Th>Status</Table.Th>
@@ -218,9 +220,10 @@ export default function AdminShipmentsPage() {
                       onClick={() => handleViewShipment(shipment)}
                     >
                       {shipment.ftlWareHouseId || shipment.proNumber}
+
                     </Text>
                   </Table.Td>
-                  <Table.Td>{shipment.customer?.name || "N/A"}</Table.Td>
+                  <Table.Td>{shipment.poNumber || "N/A"}</Table.Td>
                   <Table.Td>{getRouteFromShipment(shipment)}</Table.Td>
                   <Table.Td>{shipment.carrierName}</Table.Td>
                   <Table.Td>
@@ -319,6 +322,7 @@ export default function AdminShipmentsPage() {
         <Text>
           Are you sure you want to delete shipment &ldquo;
           {shipmentToDelete?.ftlWareHouseId || shipmentToDelete?.proNumber}&rdquo;? This action cannot be undone.
+
         </Text>
         <Group justify="flex-end" mt="lg">
           <Button variant="light" onClick={() => setDeleteModalOpened(false)}>

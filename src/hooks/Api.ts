@@ -384,6 +384,8 @@ export interface Shipment {
   quote_tracking_id?: string;
   ftlWareHouseId: string;
   proNumber: string;
+  /** Customer PO number */
+  poNumber?: string;
   carrierName: string;
   /** @format date-time */
   dateOfOrder: string;
@@ -630,6 +632,8 @@ export interface CreateShipmentDto {
   quote_tracking_id?: string;
   ftlWareHouseId: string;
   proNumber: string;
+  /** Customer PO number */
+  poNumber?: string;
   carrierName: string;
   dateOfOrder: string;
   pickupDate?: string;
@@ -645,6 +649,8 @@ export interface CreateShipmentDto {
   load_items?: LoadItem[];
   /** Array of associated document IDs */
   documents?: string[];
+  /** Shipment status */
+  status?: "pending" | "in-transit" | "delivered";
 }
 
 export interface PaginatedShipmentsDto {
@@ -660,6 +666,8 @@ export interface UpdateShipmentDto {
   quote_tracking_id?: string;
   ftlWareHouseId?: string;
   proNumber?: string;
+  /** Customer PO number */
+  poNumber?: string;
   carrierName?: string;
   dateOfOrder?: string;
   pickupDate?: string;
@@ -2230,6 +2238,8 @@ export class Api<
         /** @default 10 */
         pageSize: number;
         proNumber?: string;
+        poNumber?: string;
+        ftlWareHouseId?: string;
         carrierName?: string;
         customer_name?: string;
         customer_email?: string;

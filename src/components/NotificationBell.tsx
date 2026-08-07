@@ -11,8 +11,9 @@ import {
   Menu,
   ScrollArea,
   Text,
+  UnstyledButton,
 } from "@mantine/core";
-import { IconBell } from "@tabler/icons-react";
+import { IconBell, IconChevronRight } from "@tabler/icons-react";
 import {
   notificationKeys,
   useMarkNotificationSeenMutation,
@@ -94,25 +95,34 @@ export default function NotificationBell() {
         ) : (
           <ScrollArea.Autosize mah={320}>
             {records.map((notification) => (
-              <Menu.Item
-                key={notification._id}
-                closeMenuOnClick
-                onClick={() => handleClick(notification)}
-                style={{
-                  cursor: notification.url ? "pointer" : "default",
-                  opacity: notification.seen ? 0.75 : 1,
-                }}
-              >
-                <Group gap="xs" wrap="nowrap" justify="space-between" align="flex-start">
-                  <Text size="sm" lineClamp={2} style={{ flex: 1 }}>
-                    {notification.message}
-                  </Text>
-                  {!notification.seen && (
-                    <Badge size="xs" color="#ff6b35" variant="filled" circle>
-                      {" "}
-                    </Badge>
-                  )}
-                </Group>
+              <Menu.Item key={notification._id} p={0} closeMenuOnClick>
+                <UnstyledButton
+                  onClick={() => handleClick(notification)}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "10px 12px",
+                    textAlign: "left",
+                    cursor: notification.url ? "pointer" : "default",
+                    opacity: notification.seen ? 0.75 : 1,
+                  }}
+                >
+                  <Group gap="xs" wrap="nowrap" justify="space-between" align="flex-start">
+                    <Text size="sm" lineClamp={2} style={{ flex: 1 }}>
+                      {notification.message}
+                    </Text>
+                    <Group gap={4} wrap="nowrap" align="center">
+                      {!notification.seen && (
+                        <Badge size="xs" color="#ff6b35" variant="filled" circle>
+                          {" "}
+                        </Badge>
+                      )}
+                      {notification.url && (
+                        <IconChevronRight size={14} style={{ opacity: 0.5, flexShrink: 0 }} />
+                      )}
+                    </Group>
+                  </Group>
+                </UnstyledButton>
               </Menu.Item>
             ))}
           </ScrollArea.Autosize>

@@ -431,24 +431,6 @@ export default function AdminQuotesPage() {
       >
         {selectedQuote && (
           <Stack gap="md">
-            {/* Status and Basic Info */}
-            <Box>
-              <Text fw={600} mb="sm" c="gray.7">
-                Status
-              </Text>
-              <Select
-                data={statusOptions.filter((option) => option.value !== "all")}
-                value={selectedQuote.status}
-                onChange={(value) =>
-                  handleStatusUpdate(selectedQuote._id, value)
-                }
-                placeholder="Select status"
-                style={{ maxWidth: 200 }}
-              />
-            </Box>
-
-            <Divider />
-
             {/* Customer Information */}
             <Box>
               <Text fw={600} mb="sm" c="gray.7">
@@ -623,17 +605,6 @@ export default function AdminQuotesPage() {
                     {selectedQuote.convertedToShipment ? "Yes" : "No"}
                   </Badge>
                 </Grid.Col>
-                {hasChanges && (
-                  <Grid.Col span={12}>
-                    <Button
-                      onClick={handleSaveQuoteFields}
-                      loading={updateQuoteMutation.isPending}
-                      mt="sm"
-                    >
-                      Save Changes
-                    </Button>
-                  </Grid.Col>
-                )}
               </Grid>
             </Box>
 
@@ -763,7 +734,25 @@ export default function AdminQuotesPage() {
 
             {/* Actions */}
             <Divider />
-            <Group justify="flex-end" mt="md">
+            <Group justify="flex-end" mt="md" align="flex-end" wrap="wrap">
+              <Select
+                label="Status"
+                data={statusOptions.filter((option) => option.value !== "all")}
+                value={selectedQuote.status}
+                onChange={(value) =>
+                  handleStatusUpdate(selectedQuote._id, value)
+                }
+                placeholder="Select status"
+                style={{ maxWidth: 200 }}
+              />
+              {hasChanges && (
+                <Button
+                  onClick={handleSaveQuoteFields}
+                  loading={updateQuoteMutation.isPending}
+                >
+                  Save Changes
+                </Button>
+              )}
               <Button
                 leftSection={<IconTruck size={16} />}
                 onClick={() => {
