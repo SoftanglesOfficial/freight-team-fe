@@ -7,7 +7,7 @@ type ApiErrorBody = {
 
 const FIELD_LABELS: Record<string, string> = {
   proNumber: "PRO number",
-  ftlWareHouseId: "FTL Warehouse ID",
+  ftlWareHouseId: "FTL Number",
   carrierName: "Carrier name",
   dateOfOrder: "Date of order",
   estimatedDeliveryDate: "Estimated delivery date",

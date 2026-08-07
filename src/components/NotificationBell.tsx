@@ -11,7 +11,6 @@ import {
   Menu,
   ScrollArea,
   Text,
-  UnstyledButton,
 } from "@mantine/core";
 import { IconBell } from "@tabler/icons-react";
 import {
@@ -49,11 +48,16 @@ export default function NotificationBell() {
 
   const handleClick = async (notification: Notification) => {
     if (!notification.seen) {
-      await markSeen.mutateAsync({
-        id: notification._id,
-        data: { seen: true },
-      });
+      try {
+        await markSeen.mutateAsync({
+          id: notification._id,
+          data: { seen: true },
+        });
+      } catch {
+        // still navigate even if mark-seen fails
+      }
     }
+
     if (notification.url) {
       router.push(notification.url);
     }
@@ -90,27 +94,25 @@ export default function NotificationBell() {
         ) : (
           <ScrollArea.Autosize mah={320}>
             {records.map((notification) => (
-              <Menu.Item key={notification._id} p={0} closeMenuOnClick={false}>
-                <UnstyledButton
-                  onClick={() => handleClick(notification)}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    padding: "10px 12px",
-                    textAlign: "left",
-                  }}
-                >
-                  <Group gap="xs" wrap="nowrap" justify="space-between" align="flex-start">
-                    <Text size="sm" lineClamp={2} style={{ flex: 1 }}>
-                      {notification.message}
-                    </Text>
-                    {!notification.seen && (
-                      <Badge size="xs" color="#ff6b35" variant="filled" circle>
-                        {" "}
-                      </Badge>
-                    )}
-                  </Group>
-                </UnstyledButton>
+              <Menu.Item
+                key={notification._id}
+                closeMenuOnClick
+                onClick={() => handleClick(notification)}
+                style={{
+                  cursor: notification.url ? "pointer" : "default",
+                  opacity: notification.seen ? 0.75 : 1,
+                }}
+              >
+                <Group gap="xs" wrap="nowrap" justify="space-between" align="flex-start">
+                  <Text size="sm" lineClamp={2} style={{ flex: 1 }}>
+                    {notification.message}
+                  </Text>
+                  {!notification.seen && (
+                    <Badge size="xs" color="#ff6b35" variant="filled" circle>
+                      {" "}
+                    </Badge>
+                  )}
+                </Group>
               </Menu.Item>
             ))}
           </ScrollArea.Autosize>

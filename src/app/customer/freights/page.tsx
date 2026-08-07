@@ -124,7 +124,7 @@ export default function CustomerFreightsPage() {
                   style={{ cursor: "pointer" }}
                 >
                   <Table.Td>
-                    <Text fw={600}>{shipment.proNumber}</Text>
+                    <Text fw={600}>{shipment.ftlWareHouseId || shipment.proNumber}</Text>
                   </Table.Td>
                   <Table.Td>
                     <Text size="sm">

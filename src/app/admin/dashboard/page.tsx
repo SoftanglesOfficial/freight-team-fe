@@ -433,7 +433,7 @@ export default function AdminDashboardPage() {
                           style={{ cursor: "pointer" }}
                           onClick={() => router.push(`/admin/shipments/${shipment._id}`)}
                         >
-                          {shipment.proNumber}
+                          {shipment.ftlWareHouseId || shipment.proNumber}
                         </Text>
                       </Table.Td>
                       <Table.Td>

@@ -96,75 +96,105 @@ export default function CustomerShipmentDetailsPage() {
             <IconArrowLeft size={16} />
           </ActionIcon>
           <Title order={1} c="#293674" style={{ margin: 0 }}>
-            Shipment Details
+            {shipment?.ftlWareHouseId || shipment?.proNumber || "Shipment Details"}
           </Title>
         </Group>
       </Group>
 
       {shipment && (
         <Stack gap="xl">
-          {/* Row 1: Shipment Details */}
-          <Grid align="stretch">
-            <Grid.Col span={12}>
-              <Card shadow="sm" padding="lg" withBorder h="100%">
-                <Group justify="space-between" mb="md">
-                  <Title order={3} c="gray.8">
-                    <Group gap={0}>
-                      <IconTruck size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                      <div>Shipment Summary</div>
-                    </Group>
-                  </Title>
-                  <Badge
-                    color={getStatusBadgeColor(shipment.status || "pending")}
-                    variant="light"
-                    radius="xl"
-                    size="lg"
-                  >
-                    {(shipment.status || "pending").toUpperCase()}
-                  </Badge>
-                </Group>
+          {/* Tracking Information */}
+          <Paper withBorder p="lg" radius="md">
+            <Title order={4} c="#293674" mb="md">
+              Tracking Information
+            </Title>
+            <Grid>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Text size="sm" c="dimmed">
+                  FTL Number
+                </Text>
+                <Text fw={600}>{shipment.ftlWareHouseId || "—"}</Text>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Text size="sm" c="dimmed">
+                  Carrier PRO / Tracking #
+                </Text>
+                <Text fw={600}>{shipment.proNumber || "—"}</Text>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Text size="sm" c="dimmed">
+                  Carrier
+                </Text>
+                <Text fw={600}>{shipment.carrierName || "—"}</Text>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Text size="sm" c="dimmed">
+                  Status
+                </Text>
+                <Badge
+                  color={getStatusBadgeColor(shipment.status || "pending")}
+                  size="lg"
+                  variant="light"
+                  mt={4}
+                >
+                  {(shipment.status || "pending").replace("-", " ")}
+                </Badge>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Text size="sm" c="dimmed">
+                  Pickup Date
+                </Text>
+                <Text fw={600}>
+                  {shipment.pickupDate
+                    ? dayjs(shipment.pickupDate).format("MMM DD, YYYY")
+                    : "—"}
+                </Text>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Text size="sm" c="dimmed">
+                  Estimated Delivery
+                </Text>
+                <Text fw={600}>
+                  {shipment.estimatedDeliveryDate
+                    ? dayjs(shipment.estimatedDeliveryDate).format("MMM DD, YYYY")
+                    : "—"}
+                </Text>
+              </Grid.Col>
+              {shipment.deliveryDate && (
+                <Grid.Col span={{ base: 12, sm: 6 }}>
+                  <Text size="sm" c="dimmed">
+                    Actual Delivery
+                  </Text>
+                  <Text fw={600} c="green">
+                    {dayjs(shipment.deliveryDate).format("MMM DD, YYYY")}
+                  </Text>
+                </Grid.Col>
+              )}
+            </Grid>
+          </Paper>
+
+          {Array.isArray(shipment.notes) &&
+            shipment.notes.filter((n) => !n.internal).length > 0 && (
+              <Card shadow="sm" padding="lg" withBorder>
+                <Title order={3} c="gray.8" mb="md">
+                  Notes
+                </Title>
                 <Divider mb="lg" />
-                <Grid>
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                    <Text size="xs" c="dimmed" fw={500}>Carrier</Text>
-                    <Text size="sm" fw={600}>{shipment.carrierName}</Text>
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                    <Text size="xs" c="dimmed" fw={500}>PRO Number</Text>
-                    <Text size="sm" fw={600}>{shipment.proNumber}</Text>
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                    <Text size="xs" c="dimmed" fw={500}>Warehouse ID</Text>
-                    <Text size="sm" fw={600}>{shipment.ftlWareHouseId}</Text>
-                  </Grid.Col>
-                  <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                    <Text size="xs" c="dimmed" fw={500}>Order Date</Text>
-                    <Text size="sm" fw={600}>{dayjs(shipment.dateOfOrder).format("MMM DD, YYYY")}</Text>
-                  </Grid.Col>
-                  {shipment.quote && (
-                    <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                      <Text size="xs" c="dimmed" fw={500}>Associated Quote</Text>
-                      <Text 
-                        size="sm" 
-                        fw={600} 
-                        c="blue" 
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => {
-                          const quoteId = typeof shipment.quote === 'string' ? shipment.quote : (shipment.quote as any)._id;
-                          // In the future we can navigate to quote details
-                          // router.push(`/customer/quotes/${quoteId}`);
-                        }}
-                      >
-                        {typeof shipment.quote === 'string' 
-                          ? shipment.quote.slice(-8).toUpperCase() 
-                          : (shipment.quote as any).tracking_id || (shipment.quote as any)._id.slice(-8).toUpperCase()}
-                      </Text>
-                    </Grid.Col>
-                  )}
-                </Grid>
+                <Stack gap="xs">
+                  {[...shipment.notes]
+                    .filter((n) => !n.internal)
+                    .reverse()
+                    .map((note, i) => (
+                      <Paper key={i} withBorder p="sm" radius="sm">
+                        <Text size="xs" c="dimmed" mb={4}>
+                          {dayjs(note.createdAt).format("MMM DD, YYYY")}
+                        </Text>
+                        <Text size="sm">{note.text}</Text>
+                      </Paper>
+                    ))}
+                </Stack>
               </Card>
-            </Grid.Col>
-          </Grid>
+            )}
 
           {/* Row 2: Route Info | Tracking Map */}
           <Grid align="stretch">

@@ -359,6 +359,15 @@ export interface StatusHistoryEntry {
   /** @format date-time */
   timestamp: string;
   updatedBy?: string;
+  internal?: boolean;
+}
+
+export interface ShipmentNote {
+  text: string;
+  internal: boolean;
+  /** @format date-time */
+  createdAt: string;
+  createdBy?: string;
 }
 
 export interface Shipment {
@@ -384,7 +393,7 @@ export interface Shipment {
   estimatedDeliveryDate: string;
   /** @format date-time */
   deliveryDate?: string;
-  notes?: string;
+  notes?: ShipmentNote[];
   /** Time sensitive shipment indicator */
   timeSensitive: "yes" | "no";
   /** @format date-time */
@@ -656,7 +665,7 @@ export interface UpdateShipmentDto {
   pickupDate?: string;
   estimatedDeliveryDate?: string;
   deliveryDate?: string;
-  notes?: string;
+  newNote?: { text: string; internal: boolean };
   /** Time sensitive shipment indicator */
   timeSensitive?: "yes" | "no";
   mustArriveByDate?: string;

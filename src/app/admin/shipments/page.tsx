@@ -98,6 +98,7 @@ export default function AdminShipmentsPage() {
     shipmentsData?.records.filter((shipment: Shipment) => {
       const matchesSearch =
         searchQuery === "" ||
+        (shipment.ftlWareHouseId || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (shipment.proNumber || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (shipment.customer?.name || "")
           .toLowerCase()
@@ -216,7 +217,7 @@ export default function AdminShipmentsPage() {
                       style={{ cursor: "pointer" }}
                       onClick={() => handleViewShipment(shipment)}
                     >
-                      {shipment.proNumber}
+                      {shipment.ftlWareHouseId || shipment.proNumber}
                     </Text>
                   </Table.Td>
                   <Table.Td>{shipment.customer?.name || "N/A"}</Table.Td>
@@ -317,7 +318,7 @@ export default function AdminShipmentsPage() {
       >
         <Text>
           Are you sure you want to delete shipment &ldquo;
-          {shipmentToDelete?.proNumber}&rdquo;? This action cannot be undone.
+          {shipmentToDelete?.ftlWareHouseId || shipmentToDelete?.proNumber}&rdquo;? This action cannot be undone.
         </Text>
         <Group justify="flex-end" mt="lg">
           <Button variant="light" onClick={() => setDeleteModalOpened(false)}>

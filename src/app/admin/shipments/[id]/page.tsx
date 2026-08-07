@@ -77,6 +77,40 @@ const getStatusBadgeColor = (status: string) => {
   }
 };
 
+const getHistoryIcon = (status: string) => {
+  switch (status) {
+    case "created":
+      return "📦";
+    case "in-transit":
+      return "🚛";
+    case "delivered":
+      return "✅";
+    case "bol-uploaded":
+      return "📄";
+    case "note-added":
+      return "📝";
+    default:
+      return "🔄";
+  }
+};
+
+const getHistoryColor = (status: string) => {
+  switch (status) {
+    case "created":
+      return "blue";
+    case "in-transit":
+      return "orange";
+    case "delivered":
+      return "green";
+    case "bol-uploaded":
+      return "violet";
+    case "note-added":
+      return "gray";
+    default:
+      return "gray";
+  }
+};
+
 export default function ShipmentDetailsPage() {
   const router = useRouter();
   const params = useParams();
@@ -233,7 +267,7 @@ export default function ShipmentDetailsPage() {
             <IconArrowLeft size={16} />
           </ActionIcon>
           <Title order={1} c="gray.8" style={{ margin: 0 }}>
-            Shipment Details
+            {shipment?.ftlWareHouseId || shipment?.proNumber || "Shipment Details"}
           </Title>
         </Group>
         <Button
@@ -294,16 +328,16 @@ export default function ShipmentDetailsPage() {
                 <Divider mb="lg" />
                 <Grid>
                   <Grid.Col span={6}>
+                    <Text size="xs" c="dimmed" fw={500}>FTL Number</Text>
+                    <Text size="sm" fw={700}>{shipment.ftlWareHouseId || "N/A"}</Text>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Text size="xs" c="dimmed" fw={500}>Carrier PRO / Tracking #</Text>
+                    <Text size="sm" fw={600}>{shipment.proNumber || "N/A"}</Text>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
                     <Text size="xs" c="dimmed" fw={500}>Carrier</Text>
                     <Text size="sm" fw={600}>{shipment.carrierName}</Text>
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <Text size="xs" c="dimmed" fw={500}>PRO Number</Text>
-                    <Text size="sm" fw={600}>{shipment.proNumber}</Text>
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <Text size="xs" c="dimmed" fw={500}>FTL Warehouse ID</Text>
-                    <Text size="sm" fw={600}>{shipment.ftlWareHouseId}</Text>
                   </Grid.Col>
                   <Grid.Col span={6}>
                     <Text size="xs" c="dimmed" fw={500}>Quote Tracking ID</Text>
@@ -593,34 +627,34 @@ export default function ShipmentDetailsPage() {
                   </Button>
                 </Group>
                 <Divider mb="lg" />
-                <Box h={300} style={{ overflowY: 'auto', paddingRight: '10px' }}>
+                <Box h={300} style={{ overflowY: "auto", paddingRight: "10px" }}>
                   {shipment.status_history && shipment.status_history.length > 0 ? (
-                    <Timeline active={0} bulletSize={24} lineWidth={2}>
-                      {[...shipment.status_history].reverse().map((entry: any, index: number) => (
+                    <Timeline
+                      active={(shipment.status_history?.length || 1) - 1}
+                      bulletSize={28}
+                      lineWidth={2}
+                    >
+                      {[...(shipment.status_history || [])].reverse().map((event: any, i) => (
                         <Timeline.Item
-                          key={index}
-                          bullet={<IconClock size={12} />}
+                          key={i}
+                          bullet={<Text size="xs">{getHistoryIcon(event.status)}</Text>}
+                          color={getHistoryColor(event.status)}
                           title={
                             <Group gap="xs">
-                              <Badge color={getStatusBadgeColor(entry.status)} size="xs">
-                                {entry.status.toUpperCase()}
-                              </Badge>
-                              <Text size="xs" c="dimmed">
-                                {dayjs(entry.timestamp).format("MMM DD, YYYY HH:mm")}
+                              <Text size="sm" fw={600}>
+                                {event.note || event.status}
                               </Text>
+                              {event.internal && (
+                                <Badge size="xs" color="orange">
+                                  Internal
+                                </Badge>
+                              )}
                             </Group>
                           }
                         >
-                          {entry.note ? (
-                            <Text size="sm" mt={4}>{entry.note}</Text>
-                          ) : (
-                            <Text size="xs" mt={4} fs="italic" c="dimmed">No note provided</Text>
-                          )}
-                          {entry.location && (
-                            <Text size="xs" c="dimmed" mt={2}>
-                              Location: {entry.location.latitude.toFixed(4)}, {entry.location.longitude.toFixed(4)}
-                            </Text>
-                          )}
+                          <Text size="xs" c="dimmed">
+                            {dayjs(event.timestamp).format("MMM DD, YYYY h:mm A")}
+                          </Text>
                         </Timeline.Item>
                       ))}
                     </Timeline>

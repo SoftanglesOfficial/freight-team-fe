@@ -18,6 +18,8 @@ import {
   FileInput,
   Paper,
   Text,
+  Switch,
+  Badge,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useJsApiLoader } from "@react-google-maps/api";
@@ -81,7 +83,7 @@ const schema = yup.object().shape({
   destinationZipCode: yup.string().required("Destination zip code is required"),
   destinationBusinessName: yup.string().optional(),
   quote_tracking_id: yup.string().optional(),
-  ftlWareHouseId: yup.string().required("FTL Warehouse ID is required"),
+  ftlWareHouseId: yup.string().required("FTL Number is required"),
   proNumber: yup.string().required("PRO Number is required"),
   documents: yup.array().min(1, "At least a BOL document is required").required("BOL is required"),
   carrierName: yup.string().required("Carrier name is required"),
@@ -91,7 +93,6 @@ const schema = yup.object().shape({
     .date()
     .required("Estimated delivery date is required"),
   deliveryDate: yup.date().nullable(),
-  notes: yup.string(),
   timeSensitive: yup
     .string()
     .oneOf(["yes", "no"], "Time sensitive must be yes or no")
@@ -120,6 +121,8 @@ export default function EditShipmentPage() {
   const [isDestinationLoading, setIsDestinationLoading] = useState(false);
   const [bolParsing, setBolParsing] = useState(false);
   const [bolFile, setBolFile] = useState<File | null>(null);
+  const [newNoteText, setNewNoteText] = useState("");
+  const [noteInternal, setNoteInternal] = useState(false);
   const { token } = useAuth();
 
   const { data: shipment, isLoading: isLoadingShipment } =
@@ -154,7 +157,6 @@ export default function EditShipmentPage() {
       pickupDate: null as Date | null,
       estimatedDeliveryDate: null as Date | null,
       deliveryDate: null as Date | null,
-      notes: "",
       documents: [] as string[],
       timeSensitive: "no" as "yes" | "no",
       mustArriveByDate: null as Date | null,
@@ -206,7 +208,6 @@ export default function EditShipmentPage() {
         deliveryDate: shipment.deliveryDate
           ? dayjs(shipment.deliveryDate).toDate()
           : null,
-        notes: shipment.notes || "",
         timeSensitive: shipment.timeSensitive || "no",
         mustArriveByDate: shipment.mustArriveByDate
           ? dayjs(shipment.mustArriveByDate).toDate()
@@ -303,7 +304,6 @@ export default function EditShipmentPage() {
       deliveryDate: values.deliveryDate
         ? dayjs(values.deliveryDate).toISOString()
         : undefined,
-      notes: values.notes || undefined,
       documents: values.documents,
       timeSensitive: values.timeSensitive,
       mustArriveByDate:
@@ -325,6 +325,27 @@ export default function EditShipmentPage() {
       }
     );
   });
+
+  const handleAddNote = () => {
+    if (!newNoteText.trim()) return;
+    updateShipment(
+      {
+        id: shipmentId,
+        data: {
+          newNote: {
+            text: newNoteText.trim(),
+            internal: noteInternal,
+          },
+        },
+      },
+      {
+        onSuccess: () => {
+          setNewNoteText("");
+          setNoteInternal(false);
+        },
+      },
+    );
+  };
 
   const handleCancel = () => {
     router.push(`/admin/shipments/${shipmentId}`);
@@ -374,7 +395,7 @@ export default function EditShipmentPage() {
         // Shipment details
         if (d.carrier_name) updates.carrierName = d.carrier_name;
         if (d.pro_number) updates.proNumber = d.pro_number;
-        if (d.special_instructions) updates.notes = d.special_instructions;
+        if (d.special_instructions) setNewNoteText(d.special_instructions);
 
         // Dates (MM/DD/YYYY from BOL parser)
         if (d.pickup_date) {
@@ -505,15 +526,18 @@ export default function EditShipmentPage() {
                 placeholder="John Doe"
                 {...form.getInputProps("customerName")}
               />
-              <Select
+              <TextInput
                 label="Status"
-                placeholder="Select status"
-                data={[
-                  { value: "pending", label: "Pending" },
-                  { value: "in-transit", label: "In Transit" },
-                  { value: "delivered", label: "Delivered" },
-                ]}
-                {...form.getInputProps("status")}
+                value={
+                  form.values.status === "in-transit"
+                    ? "In Transit"
+                    : form.values.status === "delivered"
+                      ? "Delivered"
+                      : "Pending"
+                }
+                readOnly
+                disabled
+                description="Updates automatically when Pickup Date or Delivery Date is entered"
               />
             </Stack>
           </Card>
@@ -658,19 +682,19 @@ export default function EditShipmentPage() {
                 </Title>
                 <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
                   <TextInput
-                    label="Quote Tracking ID"
-                    placeholder="e.g. Q-123456"
-                    {...form.getInputProps("quote_tracking_id")}
-                  />
-                  <TextInput
-                    label="FTL Warehouse ID #"
+                    label="FTL Number"
                     placeholder="#123123124"
                     {...form.getInputProps("ftlWareHouseId")}
                   />
                   <TextInput
-                    label="PRO Number"
+                    label="Carrier PRO / Tracking #"
                     placeholder="Enter PRO Number"
                     {...form.getInputProps("proNumber")}
+                  />
+                  <TextInput
+                    label="Quote Tracking ID"
+                    placeholder="e.g. Q-123456"
+                    {...form.getInputProps("quote_tracking_id")}
                   />
                   <CarrierSelect
                     label="Carrier Name"
@@ -686,13 +710,19 @@ export default function EditShipmentPage() {
                     valueFormat="MM / DD / YYYY"
                     {...form.getInputProps("dateOfOrder")}
                   />
-                  <DatePickerInput
-                    size="md"
-                    label="Pickup Date (Opt.)"
-                    placeholder="mm / dd / yyyy"
-                    valueFormat="MM / DD / YYYY"
-                    {...form.getInputProps("pickupDate")}
-                  />
+                  <Box>
+                    <DatePickerInput
+                      size="md"
+                      label="Pickup Date (Opt.)"
+                      placeholder="mm / dd / yyyy"
+                      valueFormat="MM / DD / YYYY"
+                      {...form.getInputProps("pickupDate")}
+                    />
+                    <Text size="xs" c="dimmed" mt={4}>
+                      Entering a pickup date will automatically set status to In Transit
+                      and notify the customer.
+                    </Text>
+                  </Box>
                   <DatePickerInput
                     size="md"
                     label="Est. Delivery Date"
@@ -700,20 +730,80 @@ export default function EditShipmentPage() {
                     valueFormat="MM / DD / YYYY"
                     {...form.getInputProps("estimatedDeliveryDate")}
                   />
-                  <DatePickerInput
-                    size="md"
-                    label="Delivery Date (Opt.)"
-                    placeholder="mm / dd / yyyy"
-                    valueFormat="MM / DD / YYYY"
-                    {...form.getInputProps("deliveryDate")}
-                  />
+                  <Box>
+                    <DatePickerInput
+                      size="md"
+                      label="Delivery Date (Opt.)"
+                      placeholder="mm / dd / yyyy"
+                      valueFormat="MM / DD / YYYY"
+                      {...form.getInputProps("deliveryDate")}
+                    />
+                    <Text size="xs" c="dimmed" mt={4}>
+                      Entering a delivery date will automatically set status to Delivered
+                      and notify the customer.
+                    </Text>
+                  </Box>
                 </SimpleGrid>
-                <Textarea
-                  label="Special Notes"
-                  placeholder="Any Special Handling Requirements"
-                  minRows={2}
-                  {...form.getInputProps("notes")}
-                />
+                <Paper withBorder p="md" radius="md">
+                  <Text fw={600} size="sm" mb="sm">
+                    Add Note
+                  </Text>
+                  <Textarea
+                    placeholder="Enter shipment note..."
+                    value={newNoteText}
+                    onChange={(e) => setNewNoteText(e.target.value)}
+                    minRows={2}
+                    mb="xs"
+                  />
+                  <Group justify="space-between">
+                    <Switch
+                      label="Internal only (not visible to customer)"
+                      checked={noteInternal}
+                      onChange={(e) => setNoteInternal(e.currentTarget.checked)}
+                      color="orange"
+                    />
+                    <Button
+                      size="xs"
+                      variant="light"
+                      onClick={handleAddNote}
+                      disabled={!newNoteText.trim()}
+                      loading={isUpdating}
+                    >
+                      Add Note
+                    </Button>
+                  </Group>
+
+                  {Array.isArray(shipment?.notes) && shipment.notes.length > 0 && (
+                    <Stack gap="xs" mt="md">
+                      <Text size="sm" fw={500} c="dimmed">
+                        Previous Notes
+                      </Text>
+                      {[...shipment.notes].reverse().map((note, i) => (
+                        <Paper
+                          key={i}
+                          withBorder
+                          p="sm"
+                          radius="sm"
+                          bg={note.internal ? "orange.0" : "blue.0"}
+                        >
+                          <Group justify="space-between" mb={4}>
+                            <Badge
+                              color={note.internal ? "orange" : "blue"}
+                              size="xs"
+                            >
+                              {note.internal ? "Internal" : "Customer Visible"}
+                            </Badge>
+                            <Text size="xs" c="dimmed">
+                              {note.createdBy || "System"} ·{" "}
+                              {dayjs(note.createdAt).format("MMM DD, YYYY h:mm A")}
+                            </Text>
+                          </Group>
+                          <Text size="sm">{note.text}</Text>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  )}
+                </Paper>
               </Stack>
             </Card>
 

@@ -77,7 +77,7 @@ const schema = yup.object().shape({
   destinationZipCode: yup.string().required("Destination zip code is required"),
   destinationBusinessName: yup.string().optional(),
   quote_tracking_id: yup.string().optional(),
-  ftlWareHouseId: yup.string().required("FTL Warehouse ID is required"),
+  ftlWareHouseId: yup.string().required("FTL Number is required"),
   proNumber: yup.string().required("PRO Number is required"),
   documents: yup.array().min(1, "At least a BOL document is required").required("BOL is required"),
   carrierName: yup.string().required("Carrier name is required"),
@@ -686,19 +686,19 @@ export default function CreateShipmentPage() {
                 </Title>
                 <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
                   <TextInput
-                    label="Quote Tracking ID"
-                    placeholder="e.g. Q-123456"
-                    {...form.getInputProps("quote_tracking_id")}
-                  />
-                  <TextInput
-                    label="FTL Warehouse ID #"
+                    label="FTL Number"
                     placeholder="#123123124"
                     {...form.getInputProps("ftlWareHouseId")}
                   />
                   <TextInput
-                    label="PRO #"
+                    label="Carrier PRO / Tracking #"
                     placeholder="Enter PRO Number"
                     {...form.getInputProps("proNumber")}
+                  />
+                  <TextInput
+                    label="Quote Tracking ID"
+                    placeholder="e.g. Q-123456"
+                    {...form.getInputProps("quote_tracking_id")}
                   />
                   <CarrierSelect
                     label="Carrier Name"
