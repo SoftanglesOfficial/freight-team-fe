@@ -718,12 +718,7 @@ export default function CreateShipmentPage() {
                     valueFormat="MM / DD / YYYY"
                     {...form.getInputProps("pickupDate")}
                     onChange={(value) => {
-                      const date =
-                        value == null
-                          ? null
-                          : value instanceof Date
-                            ? value
-                            : dayjs(value).toDate();
+                      const date = value ? dayjs(value).toDate() : null;
                       form.setFieldValue("pickupDate", date);
                       if (date) {
                         form.setFieldValue("status", "in-transit");
