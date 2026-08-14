@@ -15,6 +15,7 @@ import {
   Stack,
   ThemeIcon,
   Skeleton,
+  Alert,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
@@ -26,6 +27,9 @@ import {
   IconArrowRight,
   IconMessageCircle,
   IconRefresh,
+  IconAlertTriangle,
+  IconCalendarTime,
+  IconCircleCheck,
 } from "@tabler/icons-react";
 import { useGetQuoteRequestsQuery } from "@/hooks/quote-request.hooks";
 import { useGetShipmentsQuery } from "@/hooks/shipments.hooks";
@@ -88,6 +92,104 @@ function StatCard({ label, value, icon, color, isLoading, onClick }: StatCardPro
         </ThemeIcon>
       </Group>
     </Card>
+  );
+}
+
+// --- Attention Alert Card ---
+
+interface AttentionItem {
+  id: string;
+  label: string;
+  sub: string;
+}
+
+interface AttentionCardProps {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  count: number;
+  items: AttentionItem[];
+  isLoading: boolean;
+  onItemClick: (id: string) => void;
+  onViewAll: () => void;
+}
+
+function AttentionCard({
+  title,
+  description,
+  icon,
+  count,
+  items,
+  isLoading,
+  onItemClick,
+  onViewAll,
+}: AttentionCardProps) {
+  const needsAttention = !isLoading && count > 0;
+
+  return (
+    <Alert
+      variant="light"
+      color={needsAttention ? "red" : "green"}
+      icon={needsAttention ? icon : <IconCircleCheck size={20} />}
+      radius="md"
+      styles={{ title: { width: "100%" }, message: { width: "100%" } }}
+      title={
+        <Group justify="space-between" wrap="nowrap">
+          <Text fw={700} c={needsAttention ? "red.8" : "green.8"}>
+            {title}
+          </Text>
+          {isLoading ? (
+            <Skeleton height={22} width={28} radius="sm" />
+          ) : (
+            <Badge
+              color={needsAttention ? "red" : "green"}
+              variant="filled"
+              size="lg"
+              radius="sm"
+            >
+              {count}
+            </Badge>
+          )}
+        </Group>
+      }
+    >
+      {isLoading ? (
+        <Skeleton height={16} width="70%" mt={4} />
+      ) : needsAttention ? (
+        <Stack gap={6} mt={4}>
+          {items.map((item) => (
+            <Text
+              key={item.id}
+              size="sm"
+              style={{ cursor: "pointer" }}
+              onClick={() => onItemClick(item.id)}
+            >
+              <Text span fw={600} c="red.9">
+                {item.label}
+              </Text>{" "}
+              <Text span c="dimmed">
+                {item.sub}
+              </Text>
+            </Text>
+          ))}
+          <Button
+            size="xs"
+            variant="subtle"
+            color="red"
+            rightSection={<IconArrowRight size={14} />}
+            onClick={onViewAll}
+            style={{ alignSelf: "flex-start" }}
+            mt={2}
+          >
+            View all {count}
+          </Button>
+        </Stack>
+      ) : (
+        <Text size="sm" c="dimmed" mt={4}>
+          {description}
+        </Text>
+      )}
+    </Alert>
   );
 }
 
@@ -258,6 +360,34 @@ export default function AdminDashboardPage() {
   const recentShipments = recentShipmentsData?.records || [];
   const recentQuotes = allQuotes?.records?.slice(0, 5) || [];
 
+  // Attention: shipments with a pickup scheduled for today that haven't moved to in-transit yet
+  const todayStart = dayjs().startOf("day").toISOString();
+  const todayEnd = dayjs().endOf("day").toISOString();
+  const { data: readyToScheduleData, isLoading: readyToScheduleLoading } =
+    useGetShipmentsQuery({
+      page: 1,
+      pageSize: 5,
+      status: "pending",
+      pickupDate_from: todayStart,
+      pickupDate_to: todayEnd,
+      customer_id: customerFilter.customer_id,
+    });
+  const readyToScheduleCount = readyToScheduleData?.pagination?.totalRecords ?? 0;
+  const readyToScheduleShipments = readyToScheduleData?.records || [];
+
+  // Attention: shipments whose estimated delivery date has already passed but aren't delivered
+  const yesterdayEnd = dayjs().subtract(1, "day").endOf("day").toISOString();
+  const { data: overdueDeliveryData, isLoading: overdueDeliveryLoading } =
+    useGetShipmentsQuery({
+      page: 1,
+      pageSize: 5,
+      status: "pending,in-transit",
+      estimatedDeliveryDate_to: yesterdayEnd,
+      customer_id: customerFilter.customer_id,
+    });
+  const overdueDeliveryCount = overdueDeliveryData?.pagination?.totalRecords ?? 0;
+  const overdueDeliveryShipments = overdueDeliveryData?.records || [];
+
   return (
     <Box>
       <Group justify="space-between" align="center" mb="xl">
@@ -282,6 +412,38 @@ export default function AdminDashboardPage() {
           </Button>
         </Group>
       </Group>
+
+      {/* Attention Alerts */}
+      <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md" mb="xl">
+        <AttentionCard
+          title="Ready to Schedule Today"
+          description="No shipments have a pickup scheduled for today that still need to go out."
+          icon={<IconCalendarTime size={20} />}
+          count={readyToScheduleCount}
+          items={readyToScheduleShipments.map((s: Shipment) => ({
+            id: s._id,
+            label: s.ftlWareHouseId || s.proNumber,
+            sub: `— ${getRouteFromShipment(s)}`,
+          }))}
+          isLoading={readyToScheduleLoading}
+          onItemClick={(id) => router.push(`/admin/shipments/${id}`)}
+          onViewAll={() => router.push("/admin/shipments?status=pending")}
+        />
+        <AttentionCard
+          title="Overdue Deliveries"
+          description="No shipments are past their estimated delivery date."
+          icon={<IconAlertTriangle size={20} />}
+          count={overdueDeliveryCount}
+          items={overdueDeliveryShipments.map((s: Shipment) => ({
+            id: s._id,
+            label: s.ftlWareHouseId || s.proNumber,
+            sub: `— was due ${dayjs(s.estimatedDeliveryDate).format("MMM DD, YYYY")}`,
+          }))}
+          isLoading={overdueDeliveryLoading}
+          onItemClick={(id) => router.push(`/admin/shipments/${id}`)}
+          onViewAll={() => router.push("/admin/shipments")}
+        />
+      </SimpleGrid>
 
       {/* Summary Stat Cards */}
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md" mb="xl">

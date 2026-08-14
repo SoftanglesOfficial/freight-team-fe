@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Title,
   Card,
@@ -69,8 +69,11 @@ const getRouteFromShipment = (shipment: Shipment) => {
 
 export default function AdminShipmentsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string | null>("all");
+  const [statusFilter, setStatusFilter] = useState<string | null>(
+    searchParams.get("status") || "all"
+  );
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [shipmentToDelete, setShipmentToDelete] = useState<Shipment | null>(
     null
@@ -81,6 +84,10 @@ export default function AdminShipmentsPage() {
   const [timelineOpened, setTimelineOpened] = useState(false);
 
   const { selectedCustomer } = useAdminContext();
+
+  useEffect(() => {
+    setStatusFilter(searchParams.get("status") || "all");
+  }, [searchParams]);
 
   const { data: shipmentsData, isLoading } = useGetShipmentsQuery({
     page: 1,

@@ -32,12 +32,16 @@ const extractErrorMessage = (error: unknown) => {
 };
 
 export const useCreateQuoteRequestMutation = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (data: CreateQuoteRequestDto) => {
       const res = await http.quoteRequest.quoteRequestControllerCreate(data);
       return res.data;
     },
     onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["quote-requests"] });
+
       notifications.show({
         title: "Quote request submitted",
         message: `Your quote request has been submitted successfully. Tracking ID: ${data.tracking_id}`,
