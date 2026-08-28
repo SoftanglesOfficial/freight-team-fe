@@ -83,8 +83,8 @@ const schema = yup.object().shape({
   destinationZipCode: yup.string().required("Destination zip code is required"),
   destinationBusinessName: yup.string().optional(),
   quote_tracking_id: yup.string().optional(),
-  ftlWareHouseId: yup.string().required("FTL Number is required"),
-  proNumber: yup.string().required("PRO Number is required"),
+  ftlWareHouseId: yup.string().optional(),
+  proNumber: yup.string().optional(),
   poNumber: yup.string().optional(),
   documents: yup.array().min(1, "At least a BOL document is required").required("BOL is required"),
   carrierName: yup.string().required("Carrier name is required"),
@@ -298,8 +298,8 @@ export default function EditShipmentPage() {
         values.destinationCountry
       ),
       quote_tracking_id: values.quote_tracking_id || undefined,
-      ftlWareHouseId: values.ftlWareHouseId,
-      proNumber: values.proNumber,
+      ftlWareHouseId: values.ftlWareHouseId || null,
+      proNumber: values.proNumber || null,
       poNumber: values.poNumber || undefined,
       carrierName: values.carrierName,
       dateOfOrder: dayjs(values.dateOfOrder).toISOString(),
@@ -398,7 +398,6 @@ export default function EditShipmentPage() {
 
         // Shipment details
         if (d.carrier_name) updates.carrierName = d.carrier_name;
-        if (d.pro_number) updates.proNumber = d.pro_number;
         if (d.special_instructions) setNewNoteText(d.special_instructions);
         // Pickup date is always manual — do not autofill from BOL
 
@@ -674,17 +673,17 @@ export default function EditShipmentPage() {
                 </Title>
                 <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
                   <TextInput
-                    label="FTL Number"
+                    label="FTL Number (Opt.)"
                     placeholder="#123123124"
                     {...form.getInputProps("ftlWareHouseId")}
                   />
                   <TextInput
-                    label="Carrier PRO / Tracking #"
+                    label="PRO Number (Opt.)"
                     placeholder="Enter PRO Number"
                     {...form.getInputProps("proNumber")}
                   />
                   <TextInput
-                    label="Quote Tracking ID"
+                    label="Quote Reference"
                     placeholder="e.g. Q-123456"
                     {...form.getInputProps("quote_tracking_id")}
                   />
@@ -824,6 +823,25 @@ export default function EditShipmentPage() {
 
           {/* Action Buttons */}
           <Group justify="flex-end" mt="md">
+            <Badge
+              size="lg"
+              variant="light"
+              color={
+                shipment?.status === "delivered"
+                  ? "green"
+                  : shipment?.status === "in-transit"
+                    ? "blue"
+                    : "yellow"
+              }
+              style={{ marginRight: "auto" }}
+            >
+              Current Status:{" "}
+              {shipment?.status === "in-transit"
+                ? "In Transit"
+                : shipment?.status === "delivered"
+                  ? "Delivered"
+                  : "Pending"}
+            </Badge>
             <Button
               variant="light"
               color="gray"

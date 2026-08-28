@@ -96,7 +96,7 @@ export default function CustomerShipmentDetailsPage() {
             <IconArrowLeft size={16} />
           </ActionIcon>
           <Title order={1} c="#293674" style={{ margin: 0 }}>
-            {shipment?.ftlWareHouseId || shipment?.proNumber || "Shipment Details"}
+            {shipment?.ftlWareHouseId || "N/A"}
           </Title>
         </Group>
       </Group>

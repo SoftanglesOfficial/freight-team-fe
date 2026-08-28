@@ -43,7 +43,6 @@ export default function AcceptQuotePage() {
     destination_state: "",
     destination_business_name: "",
     destination_country: "US",
-    pickupDate: null as Date | string | null,
     estimatedDeliveryDate: null as Date | string | null,
     notes: "",
   });
@@ -62,10 +61,9 @@ export default function AcceptQuotePage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { pickupDate, estimatedDeliveryDate, ...rest } = formData;
+      const { estimatedDeliveryDate, ...rest } = formData;
       await http.instance.post(`/quote-request/${id}/accept`, {
         ...rest,
-        pickupDate: pickupDate ? dayjs(pickupDate).toISOString() : undefined,
         estimatedDeliveryDate: estimatedDeliveryDate
           ? dayjs(estimatedDeliveryDate).toISOString()
           : undefined,
@@ -134,7 +132,7 @@ export default function AcceptQuotePage() {
       <Stack gap="xl">
         <Box>
           <Title order={1} c="gray.8">Complete Your Booking</Title>
-          <Text c="dimmed">Quote Request: {quote.tracking_id}</Text>
+          <Text c="dimmed">Quote Reference: {quote.tracking_id}</Text>
         </Box>
 
         <form onSubmit={handleSubmit}>
@@ -229,13 +227,6 @@ export default function AcceptQuotePage() {
             <Card withBorder radius="md" p="lg">
               <Title order={3} size="h4" mb="md" c="gray.8">Logistics & Schedule</Title>
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                <DatePickerInput
-                  label="Preferred Pickup Date"
-                  placeholder="Select date"
-                  value={formData.pickupDate}
-                  onChange={(val: any) => setFormData({ ...formData, pickupDate: val })}
-                  clearable
-                />
                 <DatePickerInput
                   label="Estimated Delivery Date"
                   placeholder="Select date"

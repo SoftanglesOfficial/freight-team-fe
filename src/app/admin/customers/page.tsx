@@ -552,7 +552,7 @@ export default function AdminCustomersPage() {
               <Table verticalSpacing="sm" highlightOnHover>
                 <Table.Thead>
                   <Table.Tr bg="gray.0">
-                    <Table.Th>Tracking ID</Table.Th>
+                    <Table.Th>Quote Reference</Table.Th>
                     <Table.Th>Route (Zip)</Table.Th>
                     <Table.Th>Status</Table.Th>
                     <Table.Th>Requested On</Table.Th>

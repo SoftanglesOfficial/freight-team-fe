@@ -179,7 +179,7 @@ export default function AdminShipmentsPage() {
       {/* Filters */}
       <Group mb="xl" gap="md">
         <TextInput
-          placeholder="Search by FTL Warehouse ID, PO, PRO, customer, route, or carrier..."
+          placeholder="Search by FTL Number, PO, PRO, customer, route, or carrier..."
           leftSection={<IconSearch size={16} />}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
@@ -204,7 +204,7 @@ export default function AdminShipmentsPage() {
           <Table verticalSpacing="md" highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>FTL Warehouse ID</Table.Th>
+                <Table.Th>FTL NUMBER</Table.Th>
                 <Table.Th>PO Number</Table.Th>
                 <Table.Th>Route</Table.Th>
                 <Table.Th>Carrier</Table.Th>
@@ -226,7 +226,7 @@ export default function AdminShipmentsPage() {
                       style={{ cursor: "pointer" }}
                       onClick={() => handleViewShipment(shipment)}
                     >
-                      {shipment.ftlWareHouseId || shipment.proNumber}
+                      {shipment.ftlWareHouseId || "N/A"}
 
                     </Text>
                   </Table.Td>

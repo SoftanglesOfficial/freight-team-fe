@@ -49,13 +49,18 @@ export default function CustomerDashboardPage() {
   const deliveredCount = deliveredData?.pagination?.totalRecords ?? 0;
   const shipments = shipmentsData?.records || [];
 
-  const recentUpdates = shipments.slice(0, 5).map((s: any) => ({
-    id: s._id,
-    tracking: s.proNumber,
-    description: `Shipment ${s.proNumber} ${s.status === "delivered" ? "delivered" : "is currently " + (s.status || "pending")}`,
-    time: "Recently updated",
-    status: s.status || "pending",
-  }));
+  const recentUpdates = shipments.slice(0, 5).map((s: any) => {
+    const referenceLabel = s.ftlWareHouseId ? "FTL Number" : "Quote Reference";
+    const referenceValue = s.ftlWareHouseId || s.quote_tracking_id || "N/A";
+
+    return {
+      id: s._id,
+      referenceLabel,
+      referenceValue,
+      time: "Recently updated",
+      status: s.status || "pending",
+    };
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -161,7 +166,10 @@ export default function CustomerDashboardPage() {
                     <IconClock size={18} color="gray" />
                     <Stack gap={2}>
                       <Text size="sm" fw={500}>
-                        Shipment {update.tracking} {update.status === 'delivered' ? 'delivered' : 'status updated to ' + update.status}
+                        {update.referenceLabel} {update.referenceValue}{" "}
+                        {update.status === "delivered"
+                          ? "delivered"
+                          : `status updated to ${update.status}`}
                       </Text>
                       <Text size="xs" c="dimmed">{update.time}</Text>
                     </Stack>

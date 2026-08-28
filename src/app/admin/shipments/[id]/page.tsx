@@ -267,7 +267,7 @@ export default function ShipmentDetailsPage() {
             <IconArrowLeft size={16} />
           </ActionIcon>
           <Title order={1} c="gray.8" style={{ margin: 0 }}>
-            {shipment?.ftlWareHouseId || shipment?.proNumber || "Shipment Details"}
+            {shipment?.ftlWareHouseId || "N/A"}
           </Title>
         </Group>
         <Button
@@ -344,7 +344,7 @@ export default function ShipmentDetailsPage() {
                     <Text size="sm" fw={600}>{shipment.poNumber || "N/A"}</Text>
                   </Grid.Col>
                   <Grid.Col span={6}>
-                    <Text size="xs" c="dimmed" fw={500}>Quote Tracking ID</Text>
+                    <Text size="xs" c="dimmed" fw={500}>Quote Reference</Text>
                     <Text size="sm" fw={600}>{(shipment as any).quote_tracking_id || "N/A"}</Text>
                   </Grid.Col>
                   <Grid.Col span={6}>

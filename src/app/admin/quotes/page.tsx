@@ -47,7 +47,11 @@ import {
   useSendQuoteEmailMutation,
   useDeleteQuoteRequestMutation,
 } from "@/hooks/quote-request.hooks";
-import type { QuoteRequest, QuoteRequestStatus } from "@/hooks/Api";
+import type {
+  QuoteRequest,
+  QuoteRequestStatus,
+  UpdateQuoteRequestDto,
+} from "@/hooks/Api";
 import { QuoteRequestStatus as QuoteRequestStatusEnum } from "@/hooks/Api";
 import { useAdminContext } from "@/contexts/AdminContext";
 
@@ -214,6 +218,21 @@ export default function AdminQuotesPage() {
     }
   };
 
+  const buildQuoteUpdatePayload = (
+    newStatus: QuoteRequestStatus
+  ): UpdateQuoteRequestDto =>
+    ({
+      status: newStatus,
+      quoteAmount: editableQuoteAmount ?? null,
+      carrierQuoteNumber: editableCarrierQuoteNumber.trim() || null,
+      carrier: editableCarrier.trim() || null,
+      estimatedTransitDays: editableEstimatedTransitDays ?? null,
+      full_name: editableFullName,
+      email: editableEmail,
+      phone: editablePhone,
+      company_name: editableCompanyName,
+    }) as UpdateQuoteRequestDto;
+
   const handleViewQuote = (quote: QuoteRequest) => {
     setSelectedQuote(quote);
     setViewModalOpened(true);
@@ -223,37 +242,34 @@ export default function AdminQuotesPage() {
     quoteId: string,
     newStatus: string | null
   ) => {
-    if (!newStatus) return;
+    if (!newStatus || !selectedQuote) return;
 
-    await updateQuoteMutation.mutateAsync({
-      id: quoteId,
-      data: { status: newStatus as QuoteRequestStatus },
-    });
-    // Close modal after successful update
-    setViewModalOpened(false);
+    try {
+      const payload = buildQuoteUpdatePayload(newStatus as QuoteRequestStatus);
+      await updateQuoteMutation.mutateAsync({
+        id: quoteId,
+        data: payload,
+      });
+      setSelectedQuote({ ...selectedQuote, ...payload });
+      setViewModalOpened(false);
+    } catch {
+      // Error notification handled by mutation onError
+    }
   };
 
   const handleSaveQuoteFields = async () => {
     if (!selectedQuote) return;
 
-    await updateQuoteMutation.mutateAsync({
-      id: selectedQuote._id,
-      data: {
-        status: selectedQuote.status,
-        // @ts-expect-error - API accepts null for empty values
-        quoteAmount: editableQuoteAmount ?? null,
-        // @ts-expect-error - API accepts null for empty values
-        carrierQuoteNumber: editableCarrierQuoteNumber.trim() || null,
-        // @ts-expect-error - API accepts null for empty values
-        carrier: editableCarrier.trim() || null,
-        // @ts-expect-error - API accepts null for empty values
-        estimatedTransitDays: editableEstimatedTransitDays ?? null,
-        full_name: editableFullName,
-        email: editableEmail,
-        phone: editablePhone,
-        company_name: editableCompanyName,
-      },
-    });
+    try {
+      const payload = buildQuoteUpdatePayload(selectedQuote.status);
+      await updateQuoteMutation.mutateAsync({
+        id: selectedQuote._id,
+        data: payload,
+      });
+      setSelectedQuote({ ...selectedQuote, ...payload });
+    } catch {
+      // Error notification handled by mutation onError
+    }
   };
 
   // Check if values have changed from original
@@ -735,6 +751,20 @@ export default function AdminQuotesPage() {
             {/* Actions */}
             <Divider />
             <Group justify="flex-end" mt="md" align="flex-end" wrap="wrap">
+              {selectedQuote.status !== QuoteRequestStatusEnum.Quoted && (
+                <Button
+                  color="blue"
+                  onClick={() =>
+                    handleStatusUpdate(
+                      selectedQuote._id,
+                      QuoteRequestStatusEnum.Quoted
+                    )
+                  }
+                  loading={updateQuoteMutation.isPending}
+                >
+                  Mark as Quoted & Notify Customer
+                </Button>
+              )}
               <Select
                 label="Status"
                 data={statusOptions.filter((option) => option.value !== "all")}
@@ -744,6 +774,7 @@ export default function AdminQuotesPage() {
                 }
                 placeholder="Select status"
                 style={{ maxWidth: 200 }}
+                disabled={updateQuoteMutation.isPending}
               />
               {hasChanges && (
                 <Button
@@ -839,7 +870,7 @@ export default function AdminQuotesPage() {
         {/* Filters */}
         <Group mb="xl" gap="md">
           <TextInput
-            placeholder="Search by tracking ID, company, name, email, or route..."
+            placeholder="Search by quote reference, company, name, email, or route..."
             leftSection={<IconSearch size={16} />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.currentTarget.value)}
@@ -867,7 +898,7 @@ export default function AdminQuotesPage() {
             <Table verticalSpacing="md" highlightOnHover>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>Quote ID</Table.Th>
+                  <Table.Th>Quote Reference</Table.Th>
                   <Table.Th>Company</Table.Th>
                   <Table.Th>Route</Table.Th>
                   <Table.Th>Quote Amount</Table.Th>

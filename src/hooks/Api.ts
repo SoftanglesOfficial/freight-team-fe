@@ -382,8 +382,8 @@ export interface Shipment {
   origin_address: Address;
   destination_address: Address;
   quote_tracking_id?: string;
-  ftlWareHouseId: string;
-  proNumber: string;
+  ftlWareHouseId?: string | null;
+  proNumber?: string | null;
   /** Customer PO number */
   poNumber?: string;
   carrierName: string;
@@ -630,8 +630,8 @@ export interface CreateShipmentDto {
   origin_address: Address;
   destination_address: Address;
   quote_tracking_id?: string;
-  ftlWareHouseId: string;
-  proNumber: string;
+  ftlWareHouseId?: string | null;
+  proNumber?: string | null;
   /** Customer PO number */
   poNumber?: string;
   carrierName: string;
@@ -664,8 +664,8 @@ export interface UpdateShipmentDto {
   origin_address?: Address;
   destination_address?: Address;
   quote_tracking_id?: string;
-  ftlWareHouseId?: string;
-  proNumber?: string;
+  ftlWareHouseId?: string | null;
+  proNumber?: string | null;
   /** Customer PO number */
   poNumber?: string;
   carrierName?: string;

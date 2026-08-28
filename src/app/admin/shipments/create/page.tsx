@@ -77,8 +77,8 @@ const schema = yup.object().shape({
   destinationZipCode: yup.string().required("Destination zip code is required"),
   destinationBusinessName: yup.string().optional(),
   quote_tracking_id: yup.string().optional(),
-  ftlWareHouseId: yup.string().required("FTL Number is required"),
-  proNumber: yup.string().required("PRO Number is required"),
+  ftlWareHouseId: yup.string().optional(),
+  proNumber: yup.string().optional(),
   poNumber: yup.string().optional(),
   documents: yup.array().min(1, "At least a BOL document is required").required("BOL is required"),
   carrierName: yup.string().required("Carrier name is required"),
@@ -186,10 +186,16 @@ export default function CreateShipmentPage() {
         "destinationZipCode",
         quoteData.destination_zip_code || ""
       );
-      form.setFieldValue(
-        "estimatedDeliveryDate",
-        quoteData.delivery_date ? new Date(quoteData.delivery_date) : null
-      );
+      if (quoteData.is_time_sensitive && quoteData.delivery_date) {
+        form.setFieldValue("estimatedDeliveryDate", new Date(quoteData.delivery_date));
+      } else if (typeof quoteData.estimatedTransitDays === "number" && quoteData.estimatedTransitDays > 0) {
+        form.setFieldValue(
+          "estimatedDeliveryDate",
+          dayjs().add(quoteData.estimatedTransitDays, "day").toDate()
+        );
+      } else {
+        form.setFieldValue("estimatedDeliveryDate", null);
+      }
       form.setFieldValue("notes", quoteData.special_instructions || "");
       form.setFieldValue(
         "timeSensitive",
@@ -290,8 +296,8 @@ export default function CreateShipmentPage() {
         values.destinationCountry
       ),
       quote_tracking_id: values.quote_tracking_id || undefined,
-      ftlWareHouseId: values.ftlWareHouseId,
-      proNumber: values.proNumber,
+      ftlWareHouseId: values.ftlWareHouseId || null,
+      proNumber: values.proNumber || null,
       poNumber: values.poNumber || undefined,
       carrierName: values.carrierName,
       dateOfOrder: dayjs(values.dateOfOrder).toISOString(),
@@ -378,7 +384,6 @@ export default function CreateShipmentPage() {
 
         // Shipment details
         if (d.carrier_name) updates.carrierName = d.carrier_name;
-        if (d.pro_number) updates.proNumber = d.pro_number;
         if (d.special_instructions) updates.notes = d.special_instructions;
         // Pickup date is always manual — do not autofill from BOL
 
@@ -678,17 +683,17 @@ export default function CreateShipmentPage() {
                 </Title>
                 <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
                   <TextInput
-                    label="FTL Number"
+                    label="FTL Number (Opt.)"
                     placeholder="#123123124"
                     {...form.getInputProps("ftlWareHouseId")}
                   />
                   <TextInput
-                    label="Carrier PRO / Tracking #"
+                    label="PRO Number (Opt.)"
                     placeholder="Enter PRO Number"
                     {...form.getInputProps("proNumber")}
                   />
                   <TextInput
-                    label="Quote Tracking ID"
+                    label="Quote Reference"
                     placeholder="e.g. Q-123456"
                     {...form.getInputProps("quote_tracking_id")}
                   />

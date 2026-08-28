@@ -37,6 +37,7 @@ import {
 } from "@tabler/icons-react";
 import { useTrackShipmentQuery } from "@/hooks/shipments.hooks";
 import ShipmentTrackingMap from "@/components/ShipmentTrackingMap";
+import ShipmentHistorySection, { publicHistory } from "@/components/ShipmentHistorySection";
 import { locationNotesFromHistory } from "@/lib/location-notes";
 import dayjs from "dayjs";
 import { useDisclosure } from "@mantine/hooks";
@@ -246,7 +247,7 @@ const TrackShipmentContent = () => {
             Where&apos;s my Freight?
           </Title>
           <Text c="dimmed" size="lg">
-            Enter your tracking number to track your shipment
+            Enter an FTL Number or Quote Reference
           </Text>
         </Box>
 
@@ -254,11 +255,11 @@ const TrackShipmentContent = () => {
         <Card shadow="sm" padding="lg" withBorder radius="md">
           <Stack gap="md">
             <Text fw={600} size="lg" c="gray.8">
-              Enter Tracking Number
+              Enter FTL Number or Quote Reference
             </Text>
             <Group gap="sm" align="flex-end">
               <TextInput
-                placeholder="e.g., RT-2025-001233"
+                placeholder="e.g., FTL-12345 or your quote reference"
                 value={trackingId}
                 onChange={(e) => setTrackingId(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -292,17 +293,21 @@ const TrackShipmentContent = () => {
                 variant="light"
                 mb="md"
               >
-                Shipment not found. Please check your tracking number and try again.
+                Shipment or quote not found. Please check the reference and try again.
               </Alert>
             )}
 
             {trackingInfo && !error && (
               <Stack gap="xl">
                 {/* Shipment Details */}
-                {trackingInfo.shipment && (
+                {trackingInfo.shipment && (() => {
+                  const visibleHistory = publicHistory(trackingInfo.shipment!.status_history);
+                  const latestEntry = visibleHistory[visibleHistory.length - 1];
+
+                  return (
                   <Box>
                     <Title order={2} c="gray.8" mb="md">
-                      Order ID: {trackingInfo.shipment.proNumber}
+                      FTL Number: {trackingInfo.shipment.ftlWareHouseId || "N/A"}
                     </Title>
 
                     <Grid>
@@ -317,9 +322,9 @@ const TrackShipmentContent = () => {
                           <Stack gap="xs">
                             <Group justify="space-between">
                               <Text size="sm" c="dimmed">
-                                Tracking Number:
+                                FTL Number:
                               </Text>
-                              <Text fw={500}>{trackingInfo?.shipment?.proNumber}</Text>
+                              <Text fw={500}>{trackingInfo.shipment.ftlWareHouseId || "N/A"}</Text>
                             </Group>
                             <Group justify="space-between">
                               <Text size="sm" c="dimmed">
@@ -381,6 +386,8 @@ const TrackShipmentContent = () => {
                       </Grid.Col>
                     </Grid>
 
+                    <ShipmentHistorySection statusHistory={trackingInfo.shipment.status_history} />
+
                 {trackingInfo?.shipment?.origin_address &&
                   trackingInfo?.shipment?.destination_address && (
                     <Box mt="xl">
@@ -406,19 +413,9 @@ const TrackShipmentContent = () => {
                         }
                         originAddress={trackingInfo.shipment.origin_address?.formatted_address}
                         destinationAddress={trackingInfo.shipment.destination_address?.formatted_address}
-                        lastNote={
-                          trackingInfo.shipment.status_history?.[
-                            trackingInfo.shipment.status_history.length - 1
-                          ]?.note
-                        }
-                        lastUpdate={
-                          trackingInfo.shipment.status_history?.[
-                            trackingInfo.shipment.status_history.length - 1
-                          ]?.timestamp
-                        }
-                        locationNotes={locationNotesFromHistory(
-                          trackingInfo.shipment.status_history,
-                        )}
+                        lastNote={latestEntry?.note}
+                        lastUpdate={latestEntry?.timestamp}
+                        locationNotes={locationNotesFromHistory(visibleHistory)}
                         height="600px"
                         hideCoordinates={true}
                       />
@@ -445,13 +442,14 @@ const TrackShipmentContent = () => {
                     </Box>
                   )}
                 </Box>
-              )}
+                  );
+                })()}
 
             {/* Quote Details */}
             {trackingInfo?.quote && (
               <Box>
                 <Title order={2} c="gray.8" mb="lg">
-                  Quote Request: {trackingInfo.quote.tracking_id}
+                  Quote Reference: {trackingInfo.quote.tracking_id}
                 </Title>
 
                 {/* Quote Stepper */}
@@ -621,7 +619,7 @@ const TrackShipmentPage = () => {
                 Where&apos;s my Freight?
               </Title>
               <Text c="dimmed" size="lg">
-                Enter your tracking number to track your shipment
+                Enter an FTL Number or Quote Reference
               </Text>
             </Box>
             <Card shadow="sm" padding="lg" withBorder radius="md">

@@ -422,7 +422,7 @@ export default function AdminDashboardPage() {
           count={readyToScheduleCount}
           items={readyToScheduleShipments.map((s: Shipment) => ({
             id: s._id,
-            label: s.ftlWareHouseId || s.proNumber,
+            label: s.ftlWareHouseId || "N/A",
             sub: `— ${getRouteFromShipment(s)}`,
           }))}
           isLoading={readyToScheduleLoading}
@@ -436,7 +436,7 @@ export default function AdminDashboardPage() {
           count={overdueDeliveryCount}
           items={overdueDeliveryShipments.map((s: Shipment) => ({
             id: s._id,
-            label: s.ftlWareHouseId || s.proNumber,
+            label: s.ftlWareHouseId || "N/A",
             sub: `— was due ${dayjs(s.estimatedDeliveryDate).format("MMM DD, YYYY")}`,
           }))}
           isLoading={overdueDeliveryLoading}
@@ -550,10 +550,10 @@ export default function AdminDashboardPage() {
             <Table verticalSpacing="sm" highlightOnHover>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>FTL Warehouse ID</Table.Th>
+                  <Table.Th>FTL NUMBER</Table.Th>
                   <Table.Th>PO Number</Table.Th>
                   <Table.Th>Status</Table.Th>
-                  <Table.Th>Date</Table.Th>
+                  <Table.Th>Last Updated</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -595,7 +595,7 @@ export default function AdminDashboardPage() {
                           style={{ cursor: "pointer" }}
                           onClick={() => router.push(`/admin/shipments/${shipment._id}`)}
                         >
-                          {shipment.ftlWareHouseId || shipment.proNumber}
+                          {shipment.ftlWareHouseId || "N/A"}
 
                         </Text>
                       </Table.Td>
@@ -620,7 +620,9 @@ export default function AdminDashboardPage() {
                       </Table.Td>
                       <Table.Td>
                         <Text size="sm" c="dimmed">
-                          {dayjs(shipment.dateOfOrder).format("MMM DD, YYYY")}
+                          {shipment.updatedAt
+                            ? dayjs(shipment.updatedAt).format("MMM DD, YYYY")
+                            : "N/A"}
                         </Text>
                       </Table.Td>
                     </Table.Tr>
@@ -651,7 +653,7 @@ export default function AdminDashboardPage() {
             <Table verticalSpacing="sm" highlightOnHover>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>Tracking ID</Table.Th>
+                  <Table.Th>Quote Reference</Table.Th>
                   <Table.Th>Company</Table.Th>
                   <Table.Th>Status</Table.Th>
                   <Table.Th>Amount</Table.Th>

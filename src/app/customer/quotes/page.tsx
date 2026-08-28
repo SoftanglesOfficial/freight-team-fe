@@ -72,7 +72,7 @@ export default function CustomerQuotesPage() {
         <Table verticalSpacing="md" horizontalSpacing="lg">
           <Table.Thead bg="gray.0">
             <Table.Tr>
-              <Table.Th>Tracking ID</Table.Th>
+              <Table.Th>Quote Reference</Table.Th>
               <Table.Th>Route</Table.Th>
               <Table.Th>Requested At</Table.Th>
               <Table.Th>Items</Table.Th>

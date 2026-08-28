@@ -44,7 +44,7 @@ export const useCreateQuoteRequestMutation = () => {
 
       notifications.show({
         title: "Quote request submitted",
-        message: `Your quote request has been submitted successfully. Tracking ID: ${data.tracking_id}`,
+        message: `Your quote request has been submitted successfully. Quote Reference: ${data.tracking_id}`,
         color: "green",
       });
     },
