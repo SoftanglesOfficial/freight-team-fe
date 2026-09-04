@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   ActionIcon,
   Badge,
+  Button,
   Group,
   Indicator,
   Menu,
@@ -13,9 +14,11 @@ import {
   Text,
   UnstyledButton,
 } from "@mantine/core";
-import { IconBell, IconChevronRight } from "@tabler/icons-react";
+import { IconBell, IconChevronRight, IconCheck, IconTrash } from "@tabler/icons-react";
 import {
   notificationKeys,
+  useClearAllNotificationsMutation,
+  useMarkAllNotificationsSeenMutation,
   useMarkNotificationSeenMutation,
   useUnseenNotificationsQuery,
 } from "@/hooks/notification.hooks";
@@ -27,6 +30,8 @@ export default function NotificationBell() {
   const queryClient = useQueryClient();
   const { data } = useUnseenNotificationsQuery();
   const markSeen = useMarkNotificationSeenMutation();
+  const markAllSeen = useMarkAllNotificationsSeenMutation();
+  const clearAll = useClearAllNotificationsMutation();
 
   const records = data?.records ?? [];
   const count = data?.pagination?.totalRecords ?? records.length;
@@ -87,7 +92,38 @@ export default function NotificationBell() {
       </Menu.Target>
 
       <Menu.Dropdown>
-        <Menu.Label>Notifications</Menu.Label>
+        <Group justify="space-between" align="center" px="sm" py={4} wrap="nowrap">
+          <Menu.Label p={0}>Notifications</Menu.Label>
+          {records.length > 0 && (
+            <Group gap={4} wrap="nowrap">
+              <Button
+                variant="subtle"
+                size="compact-xs"
+                leftSection={<IconCheck size={12} />}
+                loading={markAllSeen.isPending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  markAllSeen.mutate();
+                }}
+              >
+                Mark all read
+              </Button>
+              <Button
+                variant="subtle"
+                color="red"
+                size="compact-xs"
+                leftSection={<IconTrash size={12} />}
+                loading={clearAll.isPending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearAll.mutate();
+                }}
+              >
+                Clear
+              </Button>
+            </Group>
+          )}
+        </Group>
         {records.length === 0 ? (
           <Text size="sm" c="dimmed" px="sm" py="md">
             No new notifications

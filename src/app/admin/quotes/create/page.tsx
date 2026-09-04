@@ -27,6 +27,7 @@ import type { CreateQuoteRequestDto, Pallet } from "@/hooks/Api";
 import dayjs from "dayjs";
 import CustomerSearchSelect from "@/components/CustomerSearchSelect";
 import { useAdminContext } from "@/contexts/AdminContext";
+import BolPdfAutofill, { ParsedBolData } from "@/components/BolPdfAutofill";
 
 const palletSchema = yup.object().shape({
   weight: yup.number().required("Weight is required").min(1, "Weight must be positive"),
@@ -98,6 +99,37 @@ export default function AdminCreateQuotePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  const handleBolParsed = (d: ParsedBolData) => {
+    const updates: Record<string, unknown> = {};
+
+    if (d.shipper_zip) updates.origin_zip_code = d.shipper_zip;
+    if (d.consignee_zip) updates.destination_zip_code = d.consignee_zip;
+    if (d.special_instructions) updates.special_instructions = d.special_instructions;
+    if (d.consignee_business_name) updates.company_name = d.consignee_business_name;
+
+    const pallets = form.values.pallets;
+    if (pallets.length > 0) {
+      const weightNum = d.weight ? parseFloat(d.weight.toString().replace(/[^\d.]/g, "")) : null;
+      const lengthNum = d.pallet_length ? parseFloat(d.pallet_length.toString().replace(/[^\d.]/g, "")) : null;
+      const widthNum = d.pallet_width ? parseFloat(d.pallet_width.toString().replace(/[^\d.]/g, "")) : null;
+      const heightNum = d.pallet_height ? parseFloat(d.pallet_height.toString().replace(/[^\d.]/g, "")) : null;
+
+      updates.pallets = pallets.map((p, i) =>
+        i !== 0
+          ? p
+          : {
+              ...p,
+              ...(weightNum && !isNaN(weightNum) ? { weight: weightNum } : {}),
+              ...(lengthNum && !isNaN(lengthNum) ? { length: lengthNum } : {}),
+              ...(widthNum && !isNaN(widthNum) ? { width: widthNum } : {}),
+              ...(heightNum && !isNaN(heightNum) ? { height: heightNum } : {}),
+            },
+      );
+    }
+
+    form.setValues({ ...form.values, ...updates });
+  };
+
   const handleSubmit = form.onSubmit((values) => {
     const quoteData: CreateQuoteRequestDto = {
       ...values,
@@ -117,8 +149,10 @@ export default function AdminCreateQuotePage() {
         Create New Quote Request
       </Title>
 
+      <BolPdfAutofill onParsed={handleBolParsed} />
+
       <form onSubmit={handleSubmit}>
-        <Stack gap="xl">
+        <Stack gap="xl" mt="xl">
           {/* Customer Information */}
           <Card shadow="sm" padding="lg" withBorder>
             <Stack gap="md">

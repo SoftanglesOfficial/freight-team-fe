@@ -344,6 +344,10 @@ export default function ShipmentDetailsPage() {
                     <Text size="sm" fw={600}>{shipment.poNumber || "N/A"}</Text>
                   </Grid.Col>
                   <Grid.Col span={6}>
+                    <Text size="xs" c="dimmed" fw={500}>Invoice Number</Text>
+                    <Text size="sm" fw={600}>{shipment.invoiceNumber || "N/A"}</Text>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
                     <Text size="xs" c="dimmed" fw={500}>Quote Reference</Text>
                     <Text size="sm" fw={600}>{(shipment as any).quote_tracking_id || "N/A"}</Text>
                   </Grid.Col>

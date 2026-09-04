@@ -29,9 +29,12 @@ interface ShipmentDocumentsCardProps {
   customerId?: string;
   error?: string;
   isEdit?: boolean;
+  /** A BOL document already uploaded elsewhere (e.g. via the "Auto-fill from BOL PDF"
+   * parser) that should appear here without the user re-uploading the file. */
+  injectedBolDoc?: DocumentInfo | null;
 }
 
-interface DocumentInfo {
+export interface DocumentInfo {
   id: string;
   name: string;
   category: DocumentCategory;
@@ -57,6 +60,7 @@ export const ShipmentDocumentsCard: React.FC<ShipmentDocumentsCardProps> = ({
   customerId,
   error,
   isEdit = false,
+  injectedBolDoc = null,
 }) => {
   const [localDocs, setLocalDocs] = useState<DocumentInfo[]>([]);
   const { data: existingDocs } = useGetDocumentsByShipmentIdQuery(shipmentId || '');
@@ -71,6 +75,19 @@ export const ShipmentDocumentsCard: React.FC<ShipmentDocumentsCardProps> = ({
       setLocalDocs(formatted);
     }
   }, [existingDocs, localDocs.length]);
+
+  // Surface a BOL uploaded via the "Auto-fill from BOL PDF" parser so staff
+  // never have to upload the same file twice.
+  React.useEffect(() => {
+    if (!injectedBolDoc) return;
+    setLocalDocs((prev) => {
+      if (prev.some((d) => d.id === injectedBolDoc.id)) return prev;
+      const next = [...prev.filter((d) => d.category !== DocumentCategory.BOL), injectedBolDoc];
+      onChange(next.map((d) => d.id));
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [injectedBolDoc]);
 
   const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFileMutation();
   const { mutateAsync: createDocument, isPending: isCreatingDoc } = useCreateDocumentMutation();

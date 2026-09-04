@@ -70,13 +70,14 @@ export default function HomePage() {
                 </Link>
               </Group>
             </Stack>
-            <div className="relative z-10">
-              <div className="relative w-full h-[400px] md:h-[500px]">
+            <div className="relative z-10 w-full flex justify-center md:justify-end">
+              <div className="relative w-full max-w-[320px] sm:max-w-[400px] md:max-w-[500px] aspect-square">
                 <Image
                   src="/truck.png"
                   alt="Truck on highway"
                   fill
                   className="object-contain"
+                  sizes="(max-width: 768px) 320px, 500px"
                   priority
                 />
               </div>

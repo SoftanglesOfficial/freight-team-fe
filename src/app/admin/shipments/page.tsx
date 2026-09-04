@@ -107,7 +107,7 @@ export default function AdminShipmentsPage() {
         searchQuery === "" ||
         (shipment.ftlWareHouseId || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (shipment.poNumber || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-
+        (shipment.invoiceNumber || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (shipment.proNumber || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (shipment.customer?.name || "")
           .toLowerCase()

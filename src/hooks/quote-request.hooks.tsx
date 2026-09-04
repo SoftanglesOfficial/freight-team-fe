@@ -62,6 +62,7 @@ export const useGetQuoteRequestsQuery = (
   params: {
     page?: number;
     pageSize?: number;
+    search?: string;
     full_name?: string;
     email?: string;
     tracking_id?: string;
@@ -176,6 +177,7 @@ export const useDeleteQuoteRequestMutation = () => {
 export interface SendQuoteEmailPayload {
   quoteAmount: number;
   carrier: string;
+  carrierQuoteNumber?: string;
   estimatedTransitDays: number;
   notes?: string;
 }

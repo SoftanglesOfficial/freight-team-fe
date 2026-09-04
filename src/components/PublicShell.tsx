@@ -27,7 +27,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
 
   return (
     <AppShell
-      header={{ height: 60 }}
+      header={{ height: 88 }}
       navbar={{
         width: 300,
         breakpoint: "sm",
@@ -40,9 +40,13 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
           <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
           <Group justify="space-between" style={{ flex: 1 }}>
             <Group gap="sm">
-              <div>
-                <img src="/logo.png" alt="Logo" width={70} />
-              </div>
+              <Link href="/" style={{ display: "flex", alignItems: "center" }}>
+                <img
+                  src="/logo.png"
+                  alt="Logo"
+                  style={{ height: 88, width: "auto" }}
+                />
+              </Link>
             </Group>
             <Group ml="xl" visibleFrom="sm" gap="lg">
               <Link
@@ -114,7 +118,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
         />
       </AppShell.Navbar>
 
-      <AppShell.Main p="0" pt="60px">
+      <AppShell.Main p="0" pt="88px">
         {children}
       </AppShell.Main>
     </AppShell>

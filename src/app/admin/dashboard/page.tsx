@@ -15,7 +15,6 @@ import {
   Stack,
   ThemeIcon,
   Skeleton,
-  Alert,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
@@ -125,71 +124,100 @@ function AttentionCard({
   onViewAll,
 }: AttentionCardProps) {
   const needsAttention = !isLoading && count > 0;
+  const color = needsAttention ? "red" : "teal";
+  const visibleItems = items.slice(0, 3);
+  const remaining = count - visibleItems.length;
 
   return (
-    <Alert
-      variant="light"
-      color={needsAttention ? "red" : "green"}
-      icon={needsAttention ? icon : <IconCircleCheck size={20} />}
+    <Card
+      shadow="sm"
+      padding="lg"
+      withBorder
       radius="md"
-      styles={{ title: { width: "100%" }, message: { width: "100%" } }}
-      title={
-        <Group justify="space-between" wrap="nowrap">
-          <Text fw={700} c={needsAttention ? "red.8" : "green.8"}>
-            {title}
-          </Text>
-          {isLoading ? (
-            <Skeleton height={22} width={28} radius="sm" />
-          ) : (
-            <Badge
-              color={needsAttention ? "red" : "green"}
-              variant="filled"
-              size="lg"
-              radius="sm"
+      style={{ borderLeft: `4px solid var(--mantine-color-${color}-6)` }}
+    >
+      <Stack gap="sm">
+        <Group justify="space-between" align="flex-start" wrap="nowrap">
+          <Group gap="sm" wrap="nowrap">
+            <ThemeIcon
+              size={40}
+              radius="md"
+              variant="light"
+              color={color}
+              style={{
+                background: `linear-gradient(135deg, var(--mantine-color-${color}-6) 0%, var(--mantine-color-${color}-1) 100%)`,
+              }}
             >
+              {needsAttention ? icon : <IconCircleCheck size={20} />}
+            </ThemeIcon>
+            <Text fw={700} c={`${color}.8`}>
+              {title}
+            </Text>
+          </Group>
+          {isLoading ? (
+            <Skeleton height={26} width={32} radius="sm" />
+          ) : (
+            <Badge color={color} variant="filled" size="lg" radius="sm">
               {count}
             </Badge>
           )}
         </Group>
-      }
-    >
-      {isLoading ? (
-        <Skeleton height={16} width="70%" mt={4} />
-      ) : needsAttention ? (
-        <Stack gap={6} mt={4}>
-          {items.map((item) => (
-            <Text
-              key={item.id}
-              size="sm"
-              style={{ cursor: "pointer" }}
-              onClick={() => onItemClick(item.id)}
-            >
-              <Text span fw={600} c="red.9">
-                {item.label}
-              </Text>{" "}
-              <Text span c="dimmed">
-                {item.sub}
+
+        {isLoading ? (
+          <Stack gap={6}>
+            <Skeleton height={14} width="80%" />
+            <Skeleton height={14} width="60%" />
+          </Stack>
+        ) : needsAttention ? (
+          <Stack gap={4}>
+            {visibleItems.map((item) => (
+              <Group
+                key={item.id}
+                justify="space-between"
+                wrap="nowrap"
+                py={6}
+                px={8}
+                style={{ cursor: "pointer", borderRadius: 6 }}
+                onClick={() => onItemClick(item.id)}
+              >
+                <Text size="sm" truncate>
+                  <Text span fw={600} c="gray.8">
+                    {item.label}
+                  </Text>{" "}
+                  <Text span c="dimmed">
+                    {item.sub}
+                  </Text>
+                </Text>
+                <IconArrowRight size={14} color="var(--mantine-color-gray-5)" />
+              </Group>
+            ))}
+            {remaining > 0 && (
+              <Text size="xs" c="dimmed" px={8}>
+                +{remaining} more
               </Text>
+            )}
+            <Button
+              size="xs"
+              variant="light"
+              color={color}
+              rightSection={<IconArrowRight size={14} />}
+              onClick={onViewAll}
+              fullWidth
+              mt={4}
+            >
+              View all {count}
+            </Button>
+          </Stack>
+        ) : (
+          <Group gap={8} wrap="nowrap" py={4}>
+            <IconCircleCheck size={16} color="var(--mantine-color-teal-6)" />
+            <Text size="sm" c="dimmed">
+              {description}
             </Text>
-          ))}
-          <Button
-            size="xs"
-            variant="subtle"
-            color="red"
-            rightSection={<IconArrowRight size={14} />}
-            onClick={onViewAll}
-            style={{ alignSelf: "flex-start" }}
-            mt={2}
-          >
-            View all {count}
-          </Button>
-        </Stack>
-      ) : (
-        <Text size="sm" c="dimmed" mt={4}>
-          {description}
-        </Text>
-      )}
-    </Alert>
+          </Group>
+        )}
+      </Stack>
+    </Card>
   );
 }
 

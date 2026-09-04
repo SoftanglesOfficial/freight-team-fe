@@ -59,6 +59,32 @@ export const useMarkNotificationSeenMutation = () => {
   });
 };
 
+export const useMarkAllNotificationsSeenMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await http.instance.patch("/notification/mark-all-seen");
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+    },
+  });
+};
+
+export const useClearAllNotificationsMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await http.instance.delete("/notification/clear-all");
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+    },
+  });
+};
+
 export const useDeleteNotificationMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({

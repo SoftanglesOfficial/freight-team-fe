@@ -386,6 +386,8 @@ export interface Shipment {
   proNumber?: string | null;
   /** Customer PO number */
   poNumber?: string;
+  /** Invoice number */
+  invoiceNumber?: string;
   carrierName: string;
   /** @format date-time */
   dateOfOrder: string;
@@ -634,6 +636,8 @@ export interface CreateShipmentDto {
   proNumber?: string | null;
   /** Customer PO number */
   poNumber?: string;
+  /** Invoice number */
+  invoiceNumber?: string;
   carrierName: string;
   dateOfOrder: string;
   pickupDate?: string;
@@ -668,6 +672,8 @@ export interface UpdateShipmentDto {
   proNumber?: string | null;
   /** Customer PO number */
   poNumber?: string;
+  /** Invoice number */
+  invoiceNumber?: string;
   carrierName?: string;
   dateOfOrder?: string;
   pickupDate?: string;

@@ -52,6 +52,7 @@ export const useGetShipmentsQuery = (
   params: {
     page?: number;
     pageSize?: number;
+    search?: string;
     proNumber?: string;
     poNumber?: string;
     ftlWareHouseId?: string;

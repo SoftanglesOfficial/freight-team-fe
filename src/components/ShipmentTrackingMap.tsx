@@ -298,16 +298,49 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
     [onLocationUpdate]
   );
 
-  // Route path for polyline - only use valid coordinates
-  const routePath = useMemo(() => {
-    if (isValidCoordinate(effectiveOrigin) && isValidCoordinate(effectiveDestination)) {
-      return [
-        { lat: effectiveOrigin.latitude, lng: effectiveOrigin.longitude },
-        { lat: effectiveDestination.latitude, lng: effectiveDestination.longitude },
-      ];
+  // Traveled path: origin -> every location update in chronological order -> current
+  // location. Redrawn from scratch whenever a new location comes in, so the line
+  // always follows the shipment's actual shape rather than a single fixed curve.
+  const traveledPath = useMemo(() => {
+    const points: { lat: number; lng: number }[] = [];
+
+    if (isValidCoordinate(effectiveOrigin)) {
+      points.push({ lat: effectiveOrigin.latitude, lng: effectiveOrigin.longitude });
     }
-    return [];
-  }, [effectiveOrigin, effectiveDestination]);
+
+    const sortedNotes = [...geoNotes].sort((a, b) => {
+      const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return ta - tb;
+    });
+    for (const n of sortedNotes) {
+      points.push({ lat: n.latitude as number, lng: n.longitude as number });
+    }
+
+    if (currentLocation && isValidCoordinate(currentLocation)) {
+      points.push({ lat: currentLocation.latitude, lng: currentLocation.longitude });
+    }
+
+    // Drop consecutive duplicate points (e.g. current location already logged as a note)
+    return points.filter((p, i) => {
+      if (i === 0) return true;
+      const prev = points[i - 1];
+      return Math.abs(prev.lat - p.lat) > 0.0001 || Math.abs(prev.lng - p.lng) > 0.0001;
+    });
+  }, [effectiveOrigin, geoNotes, currentLocation]);
+
+  // Remaining route: last known position -> destination, shown lighter/dashed
+  // to distinguish "where it's been" from "where it's going".
+  const remainingPath = useMemo(() => {
+    if (!isValidCoordinate(effectiveDestination)) return [];
+    const from = traveledPath.length > 0
+      ? traveledPath[traveledPath.length - 1]
+      : isValidCoordinate(effectiveOrigin)
+        ? { lat: effectiveOrigin.latitude, lng: effectiveOrigin.longitude }
+        : null;
+    if (!from) return [];
+    return [from, { lat: effectiveDestination.latitude, lng: effectiveDestination.longitude }];
+  }, [traveledPath, effectiveOrigin, effectiveDestination]);
 
   if (loadError) {
     return (
@@ -369,7 +402,7 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
       <GoogleMap
         mapContainerStyle={{ width: "100%", height: "100%" }}
         center={center}
-        zoom={6}
+        zoom={4}
         options={{
           ...mapOptions,
           clickableIcons: !!onLocationUpdate,
@@ -395,26 +428,35 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
             );
             hasValidPoints = true;
           }
-          
+          for (const n of geoNotes) {
+            boundsObj.extend(new google.maps.LatLng(n.latitude as number, n.longitude as number));
+          }
+
           // Only fit bounds if we have at least two valid points (for proper zoom)
-          // If only one point, just center on it
+          // If only one point, just center on it, zoomed well out
           if (hasValidPoints) {
             if (boundsObj.isEmpty() || (!isValidCoordinate(effectiveOrigin) && !isValidCoordinate(effectiveDestination))) {
-              // If we only have current location, just center on it
+              // If we only have current location, just center on it, zoomed out
               if (currentLocation && isValidCoordinate(currentLocation)) {
                 map.setCenter(new google.maps.LatLng(currentLocation.latitude, currentLocation.longitude));
-                map.setZoom(12);
+                map.setZoom(7);
               }
             } else {
-              // Use minimal padding (10px) to keep markers near boundary walls
-              // This ensures both origin and destination are visible but stay close to map edges
+              // Generous padding keeps the whole route comfortably inside the
+              // viewport so the map opens zoomed OUT, not tight on the pins.
               map.fitBounds(boundsObj, {
-                top: 10,
-                right: 10,
-                bottom: 10,
-                left: 10,
+                top: 80,
+                right: 80,
+                bottom: 80,
+                left: 80,
               });
               map.setOptions({ minZoom: 3 });
+              // After fitBounds, clamp how far in it's allowed to zoom (e.g. a
+              // short local route shouldn't snap in tight either).
+              google.maps.event.addListenerOnce(map, "idle", () => {
+                const z = map.getZoom();
+                if (z !== undefined && z > 9) map.setZoom(9);
+              });
             }
           }
         }}
@@ -630,15 +672,35 @@ const ShipmentTrackingMap: React.FC<ShipmentTrackingMapProps> = ({
           </InfoWindow>
         )}
 
-        {/* Route Polyline - only render if both coordinates are valid */}
-        {isValidCoordinate(effectiveOrigin) && isValidCoordinate(effectiveDestination) && (
+        {/* Traveled path - the actual shape the shipment has moved through so far */}
+        {traveledPath.length >= 2 && (
           <Polyline
-            path={routePath}
+            path={traveledPath}
             options={{
               strokeColor: "#3b82f6",
-              strokeOpacity: 0.8,
-              strokeWeight: 3,
+              strokeOpacity: 0.9,
+              strokeWeight: 4,
               geodesic: true,
+            }}
+          />
+        )}
+
+        {/* Remaining route - last known position to destination, de-emphasized */}
+        {remainingPath.length === 2 && (
+          <Polyline
+            path={remainingPath}
+            options={{
+              strokeColor: "#94a3b8",
+              strokeOpacity: 0,
+              strokeWeight: 2,
+              geodesic: true,
+              icons: [
+                {
+                  icon: { path: "M 0,-1 0,1", strokeOpacity: 0.7, scale: 3 },
+                  offset: "0",
+                  repeat: "12px",
+                },
+              ],
             }}
           />
         )}

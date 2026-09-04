@@ -23,6 +23,7 @@ import {
   IconLogout,
   IconFiles,
   IconMessageCircle,
+  IconMail,
 } from "@tabler/icons-react";
 import { Badge, Card } from "@mantine/core";
 import { useLogout } from "@/hooks/auth.hooks";
@@ -30,7 +31,7 @@ import { useRequireAdmin } from "@/contexts/AuthContext";
 import { useGetTotalUnreadForAdminQuery } from "@/hooks/live-chat.hooks";
 import { getSocket } from "@/lib/socket";
 import { AdminProvider, useAdminContext } from "@/contexts/AdminContext";
-import CustomerSearchSelect from "@/components/CustomerSearchSelect";
+import GlobalSearchBox from "@/components/GlobalSearchBox";
 import NotificationBell from "@/components/NotificationBell";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
@@ -43,6 +44,7 @@ const navItems = [
   // { href: "/admin/messages", label: "Conversations", icon: IconMessage },
   { href: "/admin/livechat", label: "Livechat", icon: IconMessageCircle, isLiveChat: true },
   { href: "/admin/customers", label: "Customers", icon: IconUsers },
+  { href: "/admin/email-templates", label: "Email Templates", icon: IconMail },
 ];
 
 export default function AdminLayout({
@@ -130,9 +132,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           </Group>
 
           {!selectedCustomer ? (
-            <CustomerSearchSelect
-              onSelect={(customer) => setSelectedCustomer(customer)}
-              placeholder="Filter by Customer..."
+            <GlobalSearchBox
+              onSelectCustomer={(customer) => setSelectedCustomer(customer)}
+              placeholder="Search shipments, quotes, customers..."
               styles={{
                 input: {
                   backgroundColor: "rgba(255, 255, 255, 0.1)",

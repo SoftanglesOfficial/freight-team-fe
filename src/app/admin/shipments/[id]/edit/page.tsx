@@ -36,7 +36,10 @@ import type { UpdateShipmentDto, Address } from "@/hooks/Api";
 import dayjs from "dayjs";
 import CarrierSelect from "@/components/CarrierSelect";
 import CustomerSearchSelect from "@/components/CustomerSearchSelect";
-import { ShipmentDocumentsCard } from "@/components/ShipmentDocumentsCard";
+import { ShipmentDocumentsCard, DocumentInfo } from "@/components/ShipmentDocumentsCard";
+import { useUploadFileMutation } from "@/hooks/file-upload.hooks";
+import { useCreateDocumentMutation } from "@/hooks/documents.hooks";
+import { DocumentCategory } from "@/hooks/Api";
 import { useAuth } from "@/contexts/AuthContext";
 
 // Helper function to create Address from form values
@@ -86,6 +89,7 @@ const schema = yup.object().shape({
   ftlWareHouseId: yup.string().optional(),
   proNumber: yup.string().optional(),
   poNumber: yup.string().optional(),
+  invoiceNumber: yup.string().optional(),
   documents: yup.array().min(1, "At least a BOL document is required").required("BOL is required"),
   carrierName: yup.string().required("Carrier name is required"),
   dateOfOrder: yup.date().required("Date of order is required"),
@@ -122,6 +126,9 @@ export default function EditShipmentPage() {
   const [isDestinationLoading, setIsDestinationLoading] = useState(false);
   const [bolParsing, setBolParsing] = useState(false);
   const [bolFile, setBolFile] = useState<File | null>(null);
+  const [attachedBolDoc, setAttachedBolDoc] = useState<DocumentInfo | null>(null);
+  const { mutateAsync: uploadBolFile } = useUploadFileMutation();
+  const { mutateAsync: createBolDocument } = useCreateDocumentMutation();
   const [newNoteText, setNewNoteText] = useState("");
   const [noteInternal, setNoteInternal] = useState(false);
   const { token } = useAuth();
@@ -154,6 +161,7 @@ export default function EditShipmentPage() {
       ftlWareHouseId: "",
       proNumber: "",
       poNumber: "",
+      invoiceNumber: "",
       carrierName: "",
       dateOfOrder: null as Date | null,
       pickupDate: null as Date | null,
@@ -198,6 +206,7 @@ export default function EditShipmentPage() {
         ftlWareHouseId: shipment.ftlWareHouseId || "",
         proNumber: shipment.proNumber || "",
         poNumber: shipment.poNumber || "",
+        invoiceNumber: shipment.invoiceNumber || "",
         carrierName: shipment.carrierName || "",
         dateOfOrder: shipment.dateOfOrder
           ? dayjs(shipment.dateOfOrder).toDate()
@@ -301,6 +310,7 @@ export default function EditShipmentPage() {
       ftlWareHouseId: values.ftlWareHouseId || null,
       proNumber: values.proNumber || null,
       poNumber: values.poNumber || undefined,
+      invoiceNumber: values.invoiceNumber || undefined,
       carrierName: values.carrierName,
       dateOfOrder: dayjs(values.dateOfOrder).toISOString(),
       pickupDate: values.pickupDate ? dayjs(values.pickupDate).toISOString() : undefined,
@@ -426,9 +436,35 @@ export default function EditShipmentPage() {
 
         form.setValues({ ...form.values, ...updates });
 
+        // Attach the same PDF as the shipment's BOL document so staff never
+        // have to upload it a second time.
+        try {
+          const uploadRes = await uploadBolFile(file);
+          const docRes = await createBolDocument({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: uploadRes.url,
+            file_id: uploadRes.fileId,
+            category: DocumentCategory.BOL,
+            shipment_id: shipmentId,
+          });
+          setAttachedBolDoc({
+            id: docRes._id,
+            name: docRes.name,
+            category: DocumentCategory.BOL,
+          });
+        } catch {
+          notifications.show({
+            title: "BOL Attachment Failed",
+            message: "Fields were extracted, but the PDF could not be auto-attached. Please upload it manually below.",
+            color: "orange",
+          });
+        }
+
         notifications.show({
           title: "BOL Parsed Successfully",
-          message: `Extracted ${Object.keys(updates).length} fields. Please review and complete any missing information before saving.`,
+          message: `Extracted ${Object.keys(updates).length} fields and attached the BOL. Please review before saving.`,
           color: "green",
           autoClose: 6000,
         });
@@ -692,6 +728,11 @@ export default function EditShipmentPage() {
                     placeholder="Customer PO number"
                     {...form.getInputProps("poNumber")}
                   />
+                  <TextInput
+                    label="Invoice Number"
+                    placeholder="Invoice number"
+                    {...form.getInputProps("invoiceNumber")}
+                  />
                   <CarrierSelect
                     label="Carrier Name"
                     placeholder="Type to search or enter a carrier"
@@ -818,6 +859,7 @@ export default function EditShipmentPage() {
               customerId={form.values.customer_id}
               error={form.errors.documents as string}
               isEdit
+              injectedBolDoc={attachedBolDoc}
             />
           </SimpleGrid>
 

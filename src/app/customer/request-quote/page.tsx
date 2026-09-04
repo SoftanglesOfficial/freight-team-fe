@@ -26,6 +26,7 @@ import { useCreateQuoteRequestMutation } from "@/hooks/quote-request.hooks";
 import type { CreateQuoteRequestDto, Pallet } from "@/hooks/Api";
 import { useGetProfileQuery } from "@/hooks/auth.hooks";
 import dayjs from "dayjs";
+import BolPdfAutofill, { ParsedBolData } from "@/components/BolPdfAutofill";
 
 const palletSchema = yup.object().shape({
     weight: yup
@@ -160,6 +161,37 @@ export default function CustomerRequestQuotePage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [profile]);
 
+    const handleBolParsed = (d: ParsedBolData) => {
+        const updates: Partial<FormValues> = {};
+
+        if (d.shipper_zip) updates.origin_zip_code = String(d.shipper_zip);
+        if (d.consignee_zip) updates.destination_zip_code = String(d.consignee_zip);
+        if (d.special_instructions) updates.special_instructions = String(d.special_instructions);
+        if (d.consignee_business_name) updates.company_name = String(d.consignee_business_name);
+
+        const pallets = form.values.pallets;
+        if (pallets.length > 0) {
+            const weightNum = d.weight ? parseFloat(d.weight.toString().replace(/[^\d.]/g, "")) : null;
+            const lengthNum = d.pallet_length ? parseFloat(d.pallet_length.toString().replace(/[^\d.]/g, "")) : null;
+            const widthNum = d.pallet_width ? parseFloat(d.pallet_width.toString().replace(/[^\d.]/g, "")) : null;
+            const heightNum = d.pallet_height ? parseFloat(d.pallet_height.toString().replace(/[^\d.]/g, "")) : null;
+
+            updates.pallets = pallets.map((p, i) =>
+                i !== 0
+                    ? p
+                    : {
+                          ...p,
+                          ...(weightNum && !isNaN(weightNum) ? { weight: weightNum } : {}),
+                          ...(lengthNum && !isNaN(lengthNum) ? { length: lengthNum } : {}),
+                          ...(widthNum && !isNaN(widthNum) ? { width: widthNum } : {}),
+                          ...(heightNum && !isNaN(heightNum) ? { height: heightNum } : {}),
+                      },
+            );
+        }
+
+        form.setValues({ ...form.values, ...updates });
+    };
+
     const addPallet = () => {
         form.insertListItem("pallets", {
             weight: "",
@@ -256,6 +288,12 @@ export default function CustomerRequestQuotePage() {
             <Title order={1} c="#293674" fw={700}>
                 Request a Quote
             </Title>
+
+            <BolPdfAutofill
+                onParsed={handleBolParsed}
+                title="Have a BOL or order sheet already?"
+                description="Upload it here and we'll fill in the shipment details below for you."
+            />
 
             <Card
                 shadow="md"

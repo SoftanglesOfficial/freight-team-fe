@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Title,
   Card,
@@ -43,6 +43,7 @@ import {
 } from "@/hooks/users.hooks";
 import {
   useGetQuoteRequestsQuery,
+  useGetQuoteRequestQuery,
   useUpdateQuoteRequestMutation,
   useSendQuoteEmailMutation,
   useDeleteQuoteRequestMutation,
@@ -86,6 +87,8 @@ const getStatusBadgeColor = (status: string) => {
 
 export default function AdminQuotesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const openQuoteId = searchParams.get("open");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>("all");
   const [viewModalOpened, setViewModalOpened] = useState(false);
@@ -238,6 +241,16 @@ export default function AdminQuotesPage() {
     setViewModalOpened(true);
   };
 
+  // Deep link from the global search box: /admin/quotes?open=<id>
+  const { data: deepLinkedQuote } = useGetQuoteRequestQuery(openQuoteId || "");
+  useEffect(() => {
+    if (deepLinkedQuote && openQuoteId) {
+      handleViewQuote(deepLinkedQuote);
+      router.replace("/admin/quotes");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLinkedQuote, openQuoteId]);
+
   const handleStatusUpdate = async (
     quoteId: string,
     newStatus: string | null
@@ -296,11 +309,26 @@ export default function AdminQuotesPage() {
 
   const handleOpenEmailModal = () => {
     if (!selectedQuote) return;
+    // Prefill from the already-entered quote fields so staff never lose data
+    // they typed into the main quote panel by reopening this modal.
     setEmailQuoteAmount(
-      typeof selectedQuote.quoteAmount === "number" ? selectedQuote.quoteAmount : undefined
+      typeof editableQuoteAmount === "number"
+        ? editableQuoteAmount
+        : typeof selectedQuote.quoteAmount === "number"
+          ? selectedQuote.quoteAmount
+          : undefined
     );
-    setEmailCarrier("");
-    setEmailTransitDays(undefined);
+    setEmailCarrier(
+      editableCarrier ||
+        (typeof selectedQuote.carrier === "string" ? selectedQuote.carrier : "")
+    );
+    setEmailTransitDays(
+      typeof editableEstimatedTransitDays === "number"
+        ? editableEstimatedTransitDays
+        : typeof selectedQuote.estimatedTransitDays === "number"
+          ? selectedQuote.estimatedTransitDays
+          : undefined
+    );
     setEmailNotes("");
     setEmailModalOpened(true);
   };
@@ -312,6 +340,7 @@ export default function AdminQuotesPage() {
       data: {
         quoteAmount: emailQuoteAmount,
         carrier: emailCarrier,
+        carrierQuoteNumber: editableCarrierQuoteNumber.trim() || undefined,
         estimatedTransitDays: emailTransitDays,
         notes: emailNotes || undefined,
       },
