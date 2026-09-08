@@ -304,17 +304,31 @@ export default function AdminDashboardPage() {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || BASE_URL}/webhooks/google-sheets/sync-now`,
       );
-      const data = await res.json();
-      setSyncResult(`Synced: ${data.updated} updated, ${data.skipped} skipped`);
+      const text = await res.text();
+      let data: { updated?: number; skipped?: number; message?: string } = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(
+          res.ok
+            ? "Sync returned an invalid response"
+            : `Sync failed (${res.status}). Check that NEXT_PUBLIC_API_URL points at the API.`,
+        );
+      }
+      if (!res.ok) {
+        throw new Error(data.message || `Sync failed (${res.status})`);
+      }
+      setSyncResult(`Synced: ${data.updated ?? 0} updated, ${data.skipped ?? 0} skipped`);
       notifications.show({
         title: "Sync Complete",
-        message: `${data.updated} shipments updated from Google Sheets`,
+        message: `${data.updated ?? 0} shipments updated from Google Sheets`,
         color: "green",
       });
-    } catch {
+    } catch (error) {
       notifications.show({
         title: "Sync Failed",
-        message: "Could not sync from Google Sheets",
+        message:
+          error instanceof Error ? error.message : "Could not sync from Google Sheets",
         color: "red",
       });
     } finally {
